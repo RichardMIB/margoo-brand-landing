@@ -15,6 +15,11 @@ Uso duplo: (1) peça de portfólio no 99freelas; (2) se os donos aprovarem, land
 - Peças de R$300 a R$1.500, parcelamento em até 12x. Público: mulher de Fortaleza com poder de compra que compra para ocasiões.
 - **Objetivo principal da landing:** levar a cliente à loja física e ao WhatsApp. Secundário: loja online.
 
+## Ambiente
+
+- Windows, projeto em `C:\dev\margoo99`. Terminal do VS Code: **Git Bash**.
+- Todo comando do projeto (README, docs, instruções ao Richard, scripts npm) é escrito para **bash**: `/c/dev/margoo99`, barras `/`, `&&`, `$VAR`, heredoc. Nada de sintaxe PowerShell ou cmd.
+
 ## Stack (decidida)
 
 - **React + Vite + TypeScript (strict) + Tailwind CSS v4**
@@ -39,7 +44,7 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 | line | `rgba(35,32,36,.2)` | linhas divisórias |
 | fita (3D) | `#A9824F` + sheen `#FFF1DA` | cetim caramelo |
 
-- Fontes (Google Fonts): **Bodoni Moda** (títulos, 400) e **Jost** (texto, 300/400/500). Fallbacks: Didot/Georgia e Futura/system-ui.
+- Fontes (hoje via Google Fonts; na Fase 5 passam a ser hospedadas no próprio site, issue #5): **Bodoni Moda** (títulos, 400) e **Jost** (texto, 300/400/500). Fallbacks: Didot/Georgia e Futura/system-ui.
 - Logo em texto: `MARGOOBRAND`, Jost 500, `letter-spacing: .32em`.
 - Fotos **flutuam** sobre o fundo: sombra suave longa, raio 3px, sem cards iguais em grade.
 - Evitar: rótulos em CAIXA ALTA acima de títulos, "01/02/03" sem sequência real, emoji, seta "→" em botões.
