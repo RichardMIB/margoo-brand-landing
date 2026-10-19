@@ -1,0 +1,198 @@
+{
+  "fachada": {
+    "width": 605,
+    "height": 608,
+    "variants": [
+      {
+        "file": "/img/fachada-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/fachada-960.webp",
+        "width": 605
+      }
+    ]
+  },
+  "alfaiataria-colete": {
+    "width": 680,
+    "height": 1020,
+    "variants": [
+      {
+        "file": "/img/alfaiataria-colete-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/alfaiataria-colete-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "body-tricot": {
+    "width": 502,
+    "height": 830,
+    "variants": [
+      {
+        "file": "/img/body-tricot-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/body-tricot-960.webp",
+        "width": 502
+      }
+    ]
+  },
+  "camisa-seda": {
+    "width": 680,
+    "height": 575,
+    "variants": [
+      {
+        "file": "/img/camisa-seda-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/camisa-seda-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "corset-vermelho": {
+    "width": 680,
+    "height": 1020,
+    "variants": [
+      {
+        "file": "/img/corset-vermelho-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/corset-vermelho-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "jaqueta-strass": {
+    "width": 647,
+    "height": 1000,
+    "variants": [
+      {
+        "file": "/img/jaqueta-strass-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/jaqueta-strass-960.webp",
+        "width": 647
+      }
+    ]
+  },
+  "malha-canelada": {
+    "width": 680,
+    "height": 901,
+    "variants": [
+      {
+        "file": "/img/malha-canelada-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/malha-canelada-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "renda-branca": {
+    "width": 680,
+    "height": 801,
+    "variants": [
+      {
+        "file": "/img/renda-branca-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/renda-branca-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "retrato-off": {
+    "width": 680,
+    "height": 575,
+    "variants": [
+      {
+        "file": "/img/retrato-off-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/retrato-off-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "tule-babados": {
+    "width": 680,
+    "height": 961,
+    "variants": [
+      {
+        "file": "/img/tule-babados-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/tule-babados-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "vermelho-babado": {
+    "width": 680,
+    "height": 575,
+    "variants": [
+      {
+        "file": "/img/vermelho-babado-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/vermelho-babado-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "vestido-assimetrico": {
+    "width": 680,
+    "height": 822,
+    "variants": [
+      {
+        "file": "/img/vestido-assimetrico-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/vestido-assimetrico-960.webp",
+        "width": 680
+      }
+    ]
+  },
+  "vestido-estampado": {
+    "width": 647,
+    "height": 1080,
+    "variants": [
+      {
+        "file": "/img/vestido-estampado-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/vestido-estampado-960.webp",
+        "width": 647
+      }
+    ]
+  },
+  "vestido-ombro": {
+    "width": 680,
+    "height": 1020,
+    "variants": [
+      {
+        "file": "/img/vestido-ombro-480.webp",
+        "width": 480
+      },
+      {
+        "file": "/img/vestido-ombro-960.webp",
+        "width": 680
+      }
+    ]
+  }
+}
