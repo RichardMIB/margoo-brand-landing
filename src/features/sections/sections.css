@@ -1,0 +1,160 @@
+/* Seções com regras que não cabem bem em utilitários (portado do protótipo). */
+@layer components {
+  /* ---------- Letreiro duplo ---------- */
+  .marquee-row {
+    display: flex;
+    gap: 56px;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: clamp(44px, 7vw, 104px);
+    line-height: 1.05;
+  }
+  .marquee-row > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 56px;
+  }
+  /* Pérola entre as palavras */
+  .marquee-row > span::after {
+    content: '';
+    width: 0.22em;
+    height: 0.22em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #efe6d8 45%, #b9a88e 100%);
+  }
+  .marquee-row--outline {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--color-ink);
+  }
+  @supports not (-webkit-text-stroke: 1px black) {
+    .marquee-row--outline {
+      color: var(--color-ink-soft);
+    }
+  }
+
+  /* ---------- Ocasiões: grade desencontrada ---------- */
+  .occasions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  .occ-1 {
+    grid-column: 1 / span 2;
+  }
+  .occ .float {
+    aspect-ratio: 4 / 5;
+  }
+  /* Título e legenda acima de qualquer foto vizinha (regra do CLAUDE.md) */
+  .occ h3,
+  .occ p {
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 901px) {
+    .occasions {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 28px;
+    }
+    .occ-1 {
+      grid-column: 1 / span 5;
+    }
+    .occ-2 {
+      grid-column: 7 / span 3;
+      margin-top: 120px;
+    }
+    .occ-3 {
+      grid-column: 10 / span 3;
+      margin-top: 24px;
+    }
+    .occ-4 {
+      grid-column: 2 / span 3;
+      margin-top: 32px;
+    }
+    .occ-5 {
+      grid-column: 6 / span 4;
+      margin-top: -40px;
+    }
+  }
+
+  /*
+   * ---------- Vitrine ----------
+   * Padrão (sem JS, celular ≤760px ou movimento reduzido): carrossel de arrastar com scroll-snap.
+   * Na Fase 3 o motor de scroll adiciona .is-pinned no desktop: seção de 300vh com trilho sticky.
+   */
+  .rail-sticky {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    padding-block: 96px;
+  }
+  .rail-track {
+    display: flex;
+    gap: 36px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    /* 56px embaixo: overflow-x também corta na vertical, e a sombra das fotos precisa de espaço */
+    padding: 8px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px));
+    margin-bottom: -40px;
+    /* Sem isso o snap alinha o item na borda da tela e ignora o padding */
+    scroll-padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+  .rail-item {
+    flex: 0 0 auto;
+    width: min(340px, 70vw);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-decoration: none;
+    scroll-snap-align: start;
+  }
+  .rail-item .float {
+    height: min(56vh, 460px);
+  }
+  .rail-progress {
+    display: none;
+    position: relative;
+    height: 1px;
+    background: var(--color-line);
+    margin-inline: max(40px, env(safe-area-inset-left, 0px));
+  }
+  .rail-progress > i {
+    position: absolute;
+    inset: 0;
+    background: var(--color-ink);
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+
+  @media (min-width: 761px) {
+    .rail-item:nth-child(even) {
+      margin-top: 70px;
+    }
+  }
+  @media (min-width: 901px) {
+    .rail-track {
+      padding-left: max(40px, env(safe-area-inset-left, 0px));
+      padding-right: max(40px, env(safe-area-inset-right, 0px));
+      scroll-padding-inline: max(40px, env(safe-area-inset-left, 0px)) max(40px, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  /* ---------- Passos ---------- */
+  .steps-line {
+    position: relative;
+    height: 1px;
+    background: var(--color-line);
+  }
+  /* Linha cheia por padrão; na Fase 3 o motor a desenha conforme o scroll */
+  .steps-line > i {
+    position: absolute;
+    inset: 0;
+    background: var(--color-ink);
+    transform-origin: left;
+  }
+}

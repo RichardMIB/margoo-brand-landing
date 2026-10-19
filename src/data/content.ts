@@ -98,6 +98,12 @@ export const phonePlaceholder = '[NÚMERO]'
 
 // ---------- Seções (na ordem da página) ----------
 
+export const a11y = {
+  skipLink: 'Pular para o conteúdo',
+  mainId: 'conteudo',
+  navLabel: 'Principal',
+}
+
 export const header = {
   nav: [
     { label: 'Coleções', href: `#${anchors.collections}` },

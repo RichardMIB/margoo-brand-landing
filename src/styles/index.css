@@ -1,4 +1,8 @@
 @import 'tailwindcss';
+/* CSS de componentes com pseudo-elementos e estados que não cabem bem em utilitários */
+@import '../features/glass/glass.css';
+@import '../features/media/float.css';
+@import '../features/sections/sections.css';
 
 /*
  * Tokens da identidade Margoo Brand (CLAUDE.md → Identidade visual).
@@ -23,6 +27,13 @@
 
   --tracking-logo: 0.32em;
   --radius-photo: 3px;
+
+  /* Pontos de quebra do protótipo (min-width = um pixel acima do max-width original) */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 481px; /* acima de celular pequeno (cartões de contato em linha) */
+  --breakpoint-md: 761px; /* acima disso: trilho fixado da vitrine */
+  --breakpoint-nav: 821px; /* navegação do header visível */
+  --breakpoint-lg: 901px; /* layouts em duas colunas */
 }
 
 @layer base {
