@@ -1,0 +1,45 @@
+/* Fotos flutuantes (portado de .float/.tag do protótipo) */
+@layer components {
+  .float {
+    position: relative;
+    margin: 0;
+    border-radius: var(--radius-photo);
+    overflow: hidden;
+    background: var(--color-ground-deep);
+    box-shadow:
+      0 34px 64px -22px var(--color-shadow),
+      0 12px 24px -12px var(--color-shadow);
+  }
+
+  /*
+   * A imagem é 16% mais alta que a moldura e começa 8% acima dela: sobra para o parallax
+   * interno deslizar sem mostrar borda. `top` em % usa a altura da moldura (no protótipo era
+   * margin-top, que em % usa a largura e descentralizava a foto em molduras verticais).
+   */
+  .float img {
+    position: absolute;
+    left: 0;
+    top: -8%;
+    display: block;
+    width: 100%;
+    height: 116%;
+    object-fit: cover;
+  }
+
+  .float-tag {
+    position: absolute;
+    z-index: 1;
+    bottom: 14px;
+    background: var(--color-pearl);
+    color: var(--color-ink);
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .float-tag--left {
+    left: 14px;
+  }
+  .float-tag--right {
+    right: 14px;
+  }
+}
