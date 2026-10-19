@@ -1,0 +1,597 @@
+<title>Margoo Brand Landing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Jost:wght@300;400;500&display=swap">
+<style>
+/* Layout: fundo champanhe contínuo; fotos e textos flutuam em camadas sobre uma fita de cetim 3D fixa que acompanha o scroll. */
+:root{
+  --ground:#CBBCA4; --ground-deep:#BDAC91; --ink:#232024; --ink-soft:#463F39;
+  --pearl:#F6F0E7; --accent:#6B522E; --line:rgba(35,32,36,.2); --shadow:rgba(52,38,20,.3);
+  --display:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+  --body:'Jost', 'Futura', 'Avenir Next', system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-weight:300;font-size:17px;line-height:1.6;overflow-x:hidden}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+@media (min-width:900px){.wrap{padding-left:max(40px, env(safe-area-inset-left, 0px));padding-right:max(40px, env(safe-area-inset-right, 0px))}}
+
+#cena{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.page{position:relative;z-index:1}
+
+/* Botões de vidro: translúcidos, desfocam a fita atrás; luz segue o cursor, inclinam em 3D */
+.btn{--mx:50%;--my:30%;--rx:0deg;--ry:0deg;--tx:0px;--ty:0px;--lift:0px;--s:1;
+  position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 30px;border-radius:999px;font-size:16px;font-weight:400;letter-spacing:.01em;text-decoration:none;
+  -webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);
+  transform:perspective(700px) translate3d(var(--tx), calc(var(--ty) + var(--lift)), 0) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s));
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease, background .3s ease}
+.btn::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;transition:opacity .3s ease;background:radial-gradient(140px circle at var(--mx) var(--my), rgba(255,255,255,.7), rgba(255,255,255,0) 65%)}
+.btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);transform:translateX(-130%);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.btn:hover{--lift:-3px}
+.btn:hover::before{opacity:1}
+.btn:hover::after{transform:translateX(130%)}
+.btn:active{--lift:0px;--s:.97}
+.btn-ghost{color:var(--ink);border:1px solid rgba(255,255,255,.65);
+  background:linear-gradient(160deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.16) 55%, rgba(255,248,236,.32) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -10px 20px rgba(107,82,46,.14), 0 12px 28px -14px rgba(52,38,20,.5)}
+.btn-ghost:hover{box-shadow:inset 0 1px 0 #fff, inset 0 -10px 22px rgba(107,82,46,.18), 0 20px 36px -14px rgba(52,38,20,.55)}
+.btn-solid{color:var(--pearl);border:1px solid rgba(255,236,206,.38);
+  background:linear-gradient(160deg, rgba(64,58,60,.9) 0%, rgba(30,28,31,.84) 60%, rgba(52,44,40,.9) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,236,206,.5), inset 0 -12px 22px rgba(0,0,0,.35), 0 14px 30px -12px rgba(35,32,36,.6)}
+.btn-solid::before{background:radial-gradient(140px circle at var(--mx) var(--my), rgba(255,226,180,.38), rgba(255,226,180,0) 65%)}
+.btn-solid::after{background:linear-gradient(105deg, transparent 35%, rgba(255,236,206,.28) 50%, transparent 65%)}
+.btn-solid:hover{box-shadow:inset 0 1px 0 rgba(255,236,206,.65), inset 0 -12px 22px rgba(0,0,0,.35), 0 22px 40px -14px rgba(35,32,36,.65)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.btn-ghost{background:rgba(246,240,231,.85)}}
+
+/* Fotos flutuantes: moldura fixa, imagem interna com folga para o parallax */
+.float{position:relative;border-radius:3px;overflow:hidden;box-shadow:0 34px 64px -22px var(--shadow), 0 12px 24px -12px var(--shadow);background:var(--ground-deep);will-change:transform}
+.float img{display:block;width:100%;height:116%;margin-top:-8%;object-fit:cover;will-change:transform}
+.tag{position:absolute;left:14px;bottom:14px;background:var(--pearl);color:#232024;font-size:13px;padding:6px 12px;border-radius:999px}
+
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:26px}
+.logo{font-weight:500;letter-spacing:.32em;font-size:16px;text-decoration:none}
+.nav{display:flex;gap:34px;font-size:15px}
+.nav a{text-decoration:none}
+.nav a:hover{text-decoration:underline;text-underline-offset:6px}
+@media (max-width:820px){.nav{display:none}}
+
+/* Hero */
+.hero{padding-block:8px 110px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:center;min-height:680px}
+.hero-copy{display:flex;flex-direction:column;gap:30px;max-width:580px;will-change:transform}
+.kicker{font-size:15px;color:var(--ink-soft)}
+.hero h1{font-size:clamp(46px,6.4vw,94px);line-height:1}
+.lead{font-size:19px;color:var(--ink-soft);max-width:31em}
+.actions{display:flex;flex-wrap:wrap;gap:14px}
+.collage{position:relative;height:680px}
+.collage .f1{position:absolute;right:6%;top:0;width:58%;height:88%}
+.collage .f2{position:absolute;left:0;top:10%;width:34%;height:42%}
+.collage .f3{position:absolute;left:9%;bottom:0;width:31%;height:38%}
+@media (max-width:900px){.hero-grid{grid-template-columns:minmax(0,1fr);min-height:0}.collage{height:540px}}
+
+/* Letreiro de coleções */
+.marquee{overflow:hidden;padding-block:28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.marquee-row{display:flex;gap:56px;white-space:nowrap;font-family:var(--display);font-size:clamp(44px,7vw,104px);line-height:1.05;will-change:transform}
+.marquee-row span{display:inline-flex;align-items:center;gap:56px}
+.marquee-row span::after{content:"";width:.22em;height:.22em;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff 0%, #EFE6D8 45%, #B9A88E 100%)}
+.marquee-row.outline{color:transparent;-webkit-text-stroke:1px var(--ink)}
+@supports not (-webkit-text-stroke:1px black){.marquee-row.outline{color:var(--ink-soft)}}
+
+.facts .wrap{display:flex;flex-wrap:wrap}
+.fact{flex:1 1 240px;padding-block:30px;padding-right:24px;display:flex;flex-direction:column;gap:4px}
+.fact strong{font-family:var(--display);font-weight:400;font-size:26px}
+.fact span{font-size:15px;color:var(--ink-soft)}
+
+.sec{padding-block:120px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:56px}
+.sec-head h2{font-size:clamp(38px,4.6vw,66px);line-height:1.04;max-width:11em}
+.sec-head p{max-width:27em;color:var(--ink-soft)}
+.slide{will-change:transform}
+
+/* Ocasiões */
+.occasions{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:28px;align-items:start}
+.occ{text-decoration:none;display:flex;flex-direction:column;gap:14px}
+.occ .float{aspect-ratio:4/5;max-width:100%}
+.occ h3{font-size:30px}
+.occ p{font-size:15px;color:var(--ink-soft);margin-top:-8px}
+.o1{grid-column:1 / span 5}
+.o2{grid-column:7 / span 3;margin-top:120px}
+.o3{grid-column:10 / span 3;margin-top:24px}
+.o4{grid-column:2 / span 3;margin-top:32px}
+.o5{grid-column:6 / span 4;margin-top:-40px}
+.occ h3,.occ p{position:relative;z-index:1}
+@media (max-width:900px){
+  .occasions{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .occasions .occ{grid-column:auto;margin-top:0}
+  .occasions .o1{grid-column:1 / span 2}
+}
+
+/* Vitrine em movimento: scroll vertical vira trilho horizontal */
+.rail{position:relative;height:300vh}
+.rail-sticky{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;gap:40px;overflow:hidden}
+.rail-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.rail-head h2{font-size:clamp(38px,4.6vw,66px);line-height:1.04}
+.rail-head p{color:var(--ink-soft);max-width:24em}
+.rail-track{display:flex;gap:36px;padding-left:max(40px, env(safe-area-inset-left, 0px));will-change:transform}
+.rail-item{flex:0 0 auto;width:min(340px,70vw);display:flex;flex-direction:column;gap:12px;text-decoration:none}
+.rail-item:nth-child(even){margin-top:70px}
+.rail-item .float{height:min(56vh,460px)}
+.rail-item span{font-size:16px}
+.rail-progress{height:1px;background:var(--line);position:relative;margin-inline:max(40px, env(safe-area-inset-left, 0px))}
+.rail-progress i{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+@media (max-width:760px){
+  .rail{height:auto}
+  .rail-sticky{position:relative;height:auto;padding-block:96px}
+  .rail-track{overflow-x:auto;scroll-snap-type:x mandatory;padding-left:16px;padding-right:16px;padding-bottom:12px}
+  .rail-item{scroll-snap-align:start}
+  .rail-item:nth-child(even){margin-top:0}
+  .rail-progress{display:none}
+}
+
+/* Passos */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;position:relative}
+.steps-line{height:1px;background:var(--line);position:relative}
+.steps-line i{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+.steps li{flex:1 1 260px;padding:30px 28px 0 0;display:flex;flex-direction:column;gap:10px}
+.steps .n{font-family:var(--display);font-size:52px;line-height:1;color:var(--accent)}
+.steps h3{font-family:var(--body);font-weight:500;font-size:20px;letter-spacing:0}
+.steps p{color:var(--ink-soft);max-width:22em}
+
+/* Loja */
+.store{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:72px;align-items:center}
+.store .reveal{height:600px}
+.store-copy{display:flex;flex-direction:column;gap:22px}
+.store-copy h2{font-size:clamp(38px,4.4vw,60px);line-height:1.04}
+.store-copy address{font-style:normal;font-size:18px;line-height:1.7}
+.store-copy .hours{color:var(--ink-soft)}
+@media (max-width:900px){.store{grid-template-columns:minmax(0,1fr);gap:40px}.store .reveal{height:440px}}
+
+/* Atendimento */
+.talk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:start}
+.talk h2{font-size:clamp(38px,4.4vw,60px);line-height:1.04}
+.talk-copy{display:flex;flex-direction:column;gap:20px}
+.talk-copy p{color:var(--ink-soft);max-width:28em}
+.people{display:flex;flex-direction:column;gap:14px}
+/* Cartões de contato no mesmo vidro dos botões */
+.person{--mx:50%;--my:30%;--rx:0deg;--ry:0deg;--tx:0px;--ty:0px;--lift:0px;--s:1;
+  position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:96px;padding:0 18px 0 30px;border-radius:22px;color:#232024;text-decoration:none;
+  border:1px solid rgba(255,255,255,.65);
+  background:linear-gradient(160deg, rgba(255,255,255,.58) 0%, rgba(255,255,255,.18) 55%, rgba(255,248,236,.34) 100%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -14px 26px rgba(107,82,46,.14), 0 18px 36px -18px rgba(52,38,20,.5);
+  transform:perspective(900px) translate3d(var(--tx), calc(var(--ty) + var(--lift)), 0) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s));
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease}
+.person::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;transition:opacity .3s ease;background:radial-gradient(220px circle at var(--mx) var(--my), rgba(255,255,255,.72), rgba(255,255,255,0) 65%)}
+.person::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(105deg, transparent 38%, rgba(255,255,255,.55) 50%, transparent 62%);transform:translateX(-130%);transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.person:hover{--lift:-4px;box-shadow:inset 0 1px 0 #fff, inset 0 -14px 28px rgba(107,82,46,.18), 0 26px 44px -18px rgba(52,38,20,.55)}
+.person:hover::before{opacity:1}
+.person:hover::after{transform:translateX(130%)}
+.person:active{--lift:0px;--s:.98}
+.person strong{font-family:var(--display);font-weight:400;font-size:28px;display:block;line-height:1.1}
+.person small{font-size:14px;color:#4E4740}
+.person em{flex:0 0 auto;font-style:normal;font-size:15px;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;color:var(--pearl);border:1px solid rgba(255,236,206,.38);
+  background:linear-gradient(160deg, rgba(64,58,60,.9) 0%, rgba(30,28,31,.84) 60%, rgba(52,44,40,.9) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,236,206,.5), inset 0 -8px 16px rgba(0,0,0,.35);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.person:hover em{transform:translateX(-4px)}
+.person em svg{width:18px;height:18px}
+@media (max-width:480px){.person{flex-wrap:wrap;padding:18px 18px 18px 22px;gap:12px}.person em{width:100%;justify-content:center}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.person{background:rgba(246,240,231,.88)}}
+@media (max-width:900px){.talk{grid-template-columns:minmax(0,1fr)}}
+
+.finale{min-height:92vh;display:flex;align-items:center;justify-content:center;text-align:center}
+.finale .wrap{display:flex;flex-direction:column;align-items:center;gap:26px}
+.finale h2{font-size:clamp(48px,7.5vw,112px);line-height:1}
+.finale p{color:var(--ink-soft);max-width:26em}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;padding-block:40px 96px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft)}
+
+/* Controle do protótipo */
+.proto{position:fixed;right:calc(12px + env(safe-area-inset-right, 0px));bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:20;display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:var(--pearl);color:#232024;padding:6px;border-radius:24px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);font-size:13px;max-width:calc(100vw - 24px)}
+.proto span{padding:0 8px}
+.proto button{font:inherit;border:0;min-height:36px;padding:0 12px;border-radius:999px;background:transparent;color:#232024;cursor:pointer}
+.proto button[aria-pressed="true"]{background:#232024;color:#F6F0E7}
+
+@media (prefers-reduced-motion: reduce){
+  .btn,.person,.btn::after,.person em{transition:none}
+  .btn::after,.person::after{display:none}
+  .rail{height:auto}
+  .rail-sticky{position:relative;height:auto;padding-block:96px}
+  .rail-track{overflow-x:auto;padding-right:40px}
+  .rail-progress{display:none}
+}
+</style>
+
+<canvas id="cena" aria-hidden="true"></canvas>
+
+<div class="page">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#topo">MARGOOBRAND</a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#ocasioes">Coleções</a>
+      <a href="#loja">A loja</a>
+      <a href="#atendimento">Atendimento</a>
+    </nav>
+    <a class="btn btn-ghost" href="#atendimento" style="min-height:44px;padding:0 20px;font-size:15px">Falar no WhatsApp</a>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="topo">
+  <div class="wrap hero-grid">
+    <div class="hero-copy" data-drift>
+      <p class="kicker">Boutique feminina na Beira-Mar, Fortaleza</p>
+      <h1>Para mulheres que se expressam através do que vestem.</h1>
+      <p class="lead">Alfaiataria, tricot, bordados e peças de festa escolhidas uma a uma. Prove na nossa nova loja na Galeria Via Scala ou peça ajuda a uma consultora pelo WhatsApp.</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="#atendimento">Falar com uma consultora</a>
+        <a class="btn btn-ghost" href="https://margoobrand.com.br/">Ver a loja online</a>
+      </div>
+    </div>
+    <div class="collage" aria-label="Peças da coleção">
+      <figure class="float f1" data-depth="0.5" style="margin:0"><img src="img2/vestido-assimetrico.jpg" alt="Modelo com vestido assimétrico creme em estúdio"><figcaption class="tag">Vestido assimétrico</figcaption></figure>
+      <figure class="float f2" data-depth="1.2" style="margin:0"><img src="img2/jaqueta-strass.jpg" alt="Modelo com jaqueta preta de mangas com strass dourado"></figure>
+      <figure class="float f3" data-depth="0.85" style="margin:0"><img src="img2/corset-vermelho.jpg" alt="Modelo com corset e saia vermelhos de cetim"></figure>
+    </div>
+  </div>
+</section>
+
+<section class="marquee" aria-label="Linhas da coleção">
+  <div class="marquee-row" data-marquee="-1"><span>Alfaiataria</span><span>Tricot</span><span>Bordados</span><span>Festa</span><span>Cetim</span><span>Alfaiataria</span><span>Tricot</span><span>Bordados</span><span>Festa</span><span>Cetim</span></div>
+  <div class="marquee-row outline" data-marquee="1" aria-hidden="true"><span>Renda</span><span>Laise</span><span>Crepe</span><span>Malha canelada</span><span>Tafetá</span><span>Renda</span><span>Laise</span><span>Crepe</span><span>Malha canelada</span><span>Tafetá</span></div>
+</section>
+
+<section class="facts" aria-label="Diferenciais">
+  <div class="wrap">
+    <div class="fact"><strong>Até 12x</strong><span>no cartão, na loja e online</span></div>
+    <div class="fact"><strong>Presencial e online</strong><span>prove na loja ou receba em casa</span></div>
+    <div class="fact"><strong>Seg a sex, 9h às 19h</strong><span>sábado, das 9h às 14h</span></div>
+  </div>
+</section>
+
+<section class="sec" id="ocasioes">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="slide" data-slide>Uma ocasião, um look.</h2>
+      <p>Do escritório ao casamento no fim de tarde. Escolha por onde começar e veja as peças disponíveis na loja online.</p>
+    </div>
+    <div class="occasions">
+      <a class="occ o1" href="https://margoobrand.com.br/"><div class="float" data-depth="0.3"><img src="img2/alfaiataria-colete.jpg" alt="" loading="lazy"></div><h3>Alfaiataria</h3><p>Para o trabalho e os dias de presença</p></a>
+      <a class="occ o2" href="https://margoobrand.com.br/"><div class="float" data-depth="0.8"><img src="img2/vestido-ombro.jpg" alt="" loading="lazy"></div><h3>Festa</h3><p>Para as noites importantes</p></a>
+      <a class="occ o3" href="https://margoobrand.com.br/"><div class="float" data-depth="0.55"><img src="img2/vestido-estampado.jpg" alt="" loading="lazy"></div><h3>Vestidos</h3><p>Leveza para os dias de sol</p></a>
+      <a class="occ o4" href="https://margoobrand.com.br/"><div class="float" data-depth="1"><img src="img2/renda-branca.jpg" alt="" loading="lazy"></div><h3>Renda e bordados</h3><p>Detalhes feitos para serem notados</p></a>
+      <a class="occ o5" href="https://margoobrand.com.br/"><div class="float" data-depth="0.4"><img src="img2/body-tricot.jpg" alt="" loading="lazy"></div><h3>Tricot</h3><p>Essenciais arrumados sem esforço</p></a>
+    </div>
+  </div>
+</section>
+
+<section class="rail" id="vitrine" aria-label="Vitrine em movimento">
+  <div class="rail-sticky">
+    <div class="wrap rail-head">
+      <h2 class="slide" data-slide>Na vitrine agora</h2>
+      <p>Peças que acabaram de chegar à loja. Role para ver todas.</p>
+    </div>
+    <div class="rail-track">
+      <a class="rail-item" href="https://margoobrand.com.br/"><div class="float"><img src="img2/camisa-seda.jpg" alt="Modelo com camisa azul-marinho de seda e linho" loading="lazy"></div><span>Camisa de seda e linho</span></a>
+      <a class="rail-item" href="https://margoobrand.com.br/"><div class="float"><img src="img2/malha-canelada.jpg" alt="Modelo com vestido de malha canelada caramelo com recorte preto" loading="lazy"></div><span>Vestido de malha canelada</span></a>
+      <a class="rail-item" href="https://margoobrand.com.br/"><div class="float"><img src="img2/tule-babados.jpg" alt="Modelo com vestido longo de tule com babados estampado" loading="lazy"></div><span>Vestido de tule com babados</span></a>
+      <a class="rail-item" href="https://margoobrand.com.br/"><div class="float"><img src="img2/vermelho-babado.jpg" alt="Modelo com vestido curto vermelho com barra em babado" loading="lazy"></div><span>Vestido vermelho com babado</span></a>
+      <a class="rail-item" href="https://margoobrand.com.br/"><div class="float"><img src="img2/retrato-off.jpg" alt="Retrato de modelo com vestido off white de um ombro só" loading="lazy" style="object-position:center top"></div><span>Off white de um ombro</span></a>
+    </div>
+    <div class="rail-progress" aria-hidden="true"><i></i></div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head"><h2 class="slide" data-slide>Prove com calma, do jeito que preferir.</h2></div>
+    <div class="steps-line" aria-hidden="true"><i data-line></i></div>
+    <ol class="steps">
+      <li><span class="n">1</span><h3>Mande o que gostou</h3><p>Um print do Instagram ou da loja online pelo WhatsApp já basta.</p></li>
+      <li><span class="n">2</span><h3>Separamos no seu tamanho</h3><p>A consultora confirma a disponibilidade e sugere peças para combinar.</p></li>
+      <li><span class="n">3</span><h3>Prove na loja ou receba em casa</h3><p>Pagamento em até 12x no cartão, presencial ou online.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec" id="loja">
+  <div class="wrap store">
+    <figure class="float reveal" data-reveal style="margin:0"><img src="img/fachada.jpg" alt="Fachada da loja Margoo Brand com letreiro em neon azul na Galeria Via Scala" loading="lazy"></figure>
+    <div class="store-copy">
+      <h2 class="slide" data-slide>Estamos de casa nova.</h2>
+      <p style="color:var(--ink-soft);max-width:30em">A loja agora fica na Galeria Via Scala, anexa ao Hotel Gran Marquise. Vitrine renovada toda semana e espaço para provar com calma.</p>
+      <address>Av. Beira Mar, 3960, Loja 16<br>Galeria Via Scala, Meireles, Fortaleza</address>
+      <p class="hours">Segunda a sexta, das 9h às 19h<br>Sábado, das 9h às 14h</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="https://maps.google.com/?q=Av.+Beira+Mar,+3960,+Fortaleza">Como chegar</a>
+        <a class="btn btn-ghost" href="#atendimento">Avisar que vou passar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="atendimento" style="padding-top:200px">
+  <div class="wrap talk">
+    <div class="talk-copy">
+      <h2 class="slide" data-slide>Prefere conversar antes?</h2>
+      <p>Nossas consultoras ajudam a escolher o tamanho, combinar peças e separar o look para você provar na loja.</p>
+    </div>
+    <div class="people">
+      <a class="person" href="#atendimento"><span><strong>Margarida</strong><small>Consultora, WhatsApp [NÚMERO]</small></span><em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-4.4A8.4 8.4 0 1 1 20 11.5z"/></svg>Chamar no WhatsApp</em></a>
+      <a class="person" href="#atendimento"><span><strong>Edna</strong><small>Consultora, WhatsApp [NÚMERO]</small></span><em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-4.4A8.4 8.4 0 1 1 20 11.5z"/></svg>Chamar no WhatsApp</em></a>
+    </div>
+  </div>
+</section>
+
+<section class="finale" aria-label="Encerramento">
+  <div class="wrap">
+    <h2>Cada detalhe conta.</h2>
+    <p>Galeria Via Scala, Av. Beira Mar, 3960. Esperamos sua visita.</p>
+    <a class="btn btn-solid" href="https://maps.google.com/?q=Av.+Beira+Mar,+3960,+Fortaleza">Como chegar</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="logo">MARGOOBRAND</span>
+    <span>Instagram <a href="https://www.instagram.com/margoobrand_/">@margoobrand_</a></span>
+    <span>Loja online <a href="https://margoobrand.com.br/">margoobrand.com.br</a></span>
+    <span>Site por DataCode Studio</span>
+  </div>
+</footer>
+</div>
+
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer = matchMedia('(pointer: fine)').matches;
+const narrow = matchMedia('(max-width: 760px)');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+/* ---------- Estado compartilhado ---------- */
+const mode = 'colar'; // decisão aprovada: fio condutor + colar de pérolas
+const S = { mx: 0, my: 0, tx: 0, ty: 0, y: scrollY, lastY: scrollY, vel: 0 };
+if (finePointer) addEventListener('pointermove', e => { S.mx = e.clientX / innerWidth - .5; S.my = e.clientY / innerHeight - .5; }, { passive: true });
+
+/* ---------- Efeitos de scroll no DOM (um único motor) ---------- */
+const floats = [...document.querySelectorAll('.float[data-depth]')];
+const allImgs = [...document.querySelectorAll('.float img')];
+const marquees = [...document.querySelectorAll('[data-marquee]')];
+const slides = [...document.querySelectorAll('[data-slide]')];
+const drift = document.querySelector('[data-drift]');
+const line = document.querySelector('[data-line]');
+const reveal = document.querySelector('[data-reveal]');
+const rail = document.querySelector('.rail');
+const railTrack = document.querySelector('.rail-track');
+const railBar = document.querySelector('.rail-progress i');
+const inView = r => r.bottom > -150 && r.top < innerHeight + 150;
+
+function domFrame() {
+  const vh = innerHeight;
+  S.tx += (S.mx - S.tx) * .06; S.ty += (S.my - S.ty) * .06;
+
+  // Fotos flutuantes: profundidade no mouse e no scroll
+  for (const el of floats) {
+    const r = el.getBoundingClientRect(); if (!inView(r)) continue;
+    const d = +el.dataset.depth;
+    const off = (r.top + r.height / 2 - vh / 2) * -0.05 * d;
+    el.style.transform = `translate3d(${S.tx * -18 * d}px, ${S.ty * -14 * d + off}px, 0)`;
+  }
+  // Parallax interno: a foto desliza dentro da moldura
+  for (const img of allImgs) {
+    const r = img.parentElement.getBoundingClientRect(); if (!inView(r)) continue;
+    const p = clamp((r.top + r.height / 2) / vh, -0.2, 1.2) - .5;
+    img.style.transform = `translate3d(0, ${p * -9}%, 0)`;
+  }
+  // Hero: texto sobe mais devagar que a página
+  if (drift) drift.style.transform = `translate3d(0, ${Math.min(S.y, 900) * .18}px, 0)`;
+  // Letreiro: cada linha anda para um lado conforme o scroll
+  for (const m of marquees) {
+    const r = m.getBoundingClientRect(); if (!inView(r)) continue;
+    m.style.transform = `translate3d(${(r.top - vh) * .45 * +m.dataset.marquee - 200}px, 0, 0)`;
+  }
+  // Títulos entram de lado (sempre visíveis, só deslocados)
+  for (const h of slides) {
+    const r = h.getBoundingClientRect(); if (!inView(r)) continue;
+    const k = 1 - smooth(vh * .95, vh * .55, r.top);
+    h.style.transform = `translate3d(${k * 48}px, 0, 0)`;
+  }
+  // Linha dos passos se desenha
+  if (line) { const r = line.getBoundingClientRect(); line.style.transform = `scaleX(${smooth(vh * .9, vh * .4, r.top)})`; }
+  // Foto da loja abre a moldura
+  if (reveal) {
+    const r = reveal.getBoundingClientRect();
+    const k = 1 - smooth(vh, vh * .35, r.top);
+    reveal.style.clipPath = `inset(${k * 10}% ${k * 14}% ${k * 10}% ${k * 14}% round 3px)`;
+  }
+  // Trilho horizontal fixado
+  if (!narrow.matches && rail && railTrack) {
+    const r = rail.getBoundingClientRect();
+    const total = r.height - vh;
+    const p = clamp(-r.top / total, 0, 1);
+    const dist = railTrack.scrollWidth - innerWidth + 80;
+    railTrack.style.transform = `translate3d(${-p * Math.max(dist, 0)}px, 0, 0)`;
+    if (railBar) railBar.style.transform = `scaleX(${p})`;
+  } else if (railTrack) railTrack.style.transform = '';
+}
+
+/* ---------- Cena 3D: fita de cetim + pérolas ---------- */
+const canvas = document.getElementById('cena');
+let scene3d = null;
+const gl = (() => { try { return canvas.getContext('webgl2') || canvas.getContext('webgl'); } catch (e) { return null; } })();
+
+if (gl) {
+  const renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  camera.position.set(0, 0, 14);
+  const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(4, 6, 8); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffe9cc, .9); rim.position.set(-6, -2, -4); scene.add(rim);
+
+  // Fita caramelo: contraste sobre o champanhe
+  const SEG = 240, ACROSS = 20, W = 1.6;
+  const geo = new THREE.PlaneGeometry(1, 1, SEG, ACROSS);
+  const pos = geo.attributes.position;
+  const ribbonMat = new THREE.MeshPhysicalMaterial({
+    color: 0xA9824F, roughness: .3, metalness: .05, sheen: 1, sheenRoughness: .3,
+    sheenColor: new THREE.Color(0xFFF1DA), clearcoat: .5, clearcoatRoughness: .22, side: THREE.DoubleSide
+  });
+  const ribbon = new THREE.Mesh(geo, ribbonMat);
+  const ribbonGroup = new THREE.Group(); ribbonGroup.add(ribbon); scene.add(ribbonGroup);
+
+  // Pérolas: espalhadas no topo, viram colar no fim da página
+  const pearlMat = new THREE.MeshPhysicalMaterial({ color: 0xF8F2E8, roughness: .16, iridescence: 1, iridescenceIOR: 1.6, clearcoat: 1, clearcoatRoughness: .1 });
+  const pearlGeo = new THREE.SphereGeometry(1, 40, 40);
+  const N = 25;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const pearls = Array.from({ length: N }, (_, i) => {
+    const m = new THREE.Mesh(pearlGeo, pearlMat);
+    const scatter = new THREE.Vector3((rnd() - .5) * 15, (rnd() - .5) * 8.5, (rnd() - .5) * 4 - 1);
+    const s = .12 + rnd() * .3;
+    m.userData = { scatter, necklace: new THREE.Vector3(), u: i / (N - 1), s, ph: rnd() * 6.28, show: i < 6 };
+    scene.add(m); return m;
+  });
+
+  const tmp = new THREE.Vector3();
+  const ribbonAt = (u, v, t, phase, amp, out) => {
+    const x = THREE.MathUtils.lerp(-9.5, 9.5, u);
+    const y = Math.sin(u * Math.PI * 2.4 + t * .55 + phase) * 1.5 * amp + Math.sin(u * Math.PI * 5 + t * .9) * .3 * amp;
+    const z = Math.cos(u * Math.PI * 1.8 + t * .4 + phase * .6) * 2.1;
+    const twist = u * Math.PI * 3.2 + Math.sin(t * .35 + u * 4) * .9 + phase;
+    const fold = Math.sin((v + .5) * Math.PI) * .2 * amp * Math.sin(u * 22 + t * 1.6);
+    out.set(x, y + Math.cos(twist) * v * W, z + Math.sin(twist) * v * W + fold);
+  };
+  const updateRibbon = (t, phase, amp) => {
+    let i = 0;
+    for (let a = 0; a <= ACROSS; a++) {
+      const v = a / ACROSS - .5;
+      for (let s = 0; s <= SEG; s++) { ribbonAt(s / SEG, v, t, phase, amp, tmp); pos.setXYZ(i++, tmp.x, tmp.y, tmp.z); }
+    }
+    pos.needsUpdate = true; geo.computeVertexNormals();
+  };
+
+  let pxToWorld = 1;
+  const resize = () => {
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth / innerHeight;
+    camera.position.z = camera.aspect < 1 ? 21 : 14;
+    camera.updateProjectionMatrix();
+    const visH = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+    pxToWorld = visH / innerHeight;
+    // Colar em U: pende dos cantos de cima e passa por baixo do título final
+    const R = Math.min(6, visH * camera.aspect / 2 * .86), top = visH / 2 * .9, dip = visH * .62;
+    for (const m of pearls) {
+      const x = (m.userData.u - .5) * 2 * R;
+      m.userData.necklace.set(x, top - dip * (1 - Math.pow(x / R, 2)), .5);
+    }
+  };
+  addEventListener('resize', resize); resize();
+
+  let t = 0, rx = 0, ry = 0, amp = 1;
+  scene3d = {
+    frame(dt, frozen) {
+      if (!frozen) t += dt;
+      const docH = document.documentElement.scrollHeight - innerHeight;
+      const p = docH > 0 ? clamp(S.y / docH, 0, 1) : 0;
+      // Vento: velocidade do scroll agita o tecido
+      const wind = clamp(Math.abs(S.vel) / 1800, 0, 1.4);
+      amp += ((1 + wind) - amp) * .08;
+      ry += ((finePointer ? S.tx : 0) * .35 - ry) * .05;
+      rx += ((finePointer ? S.ty : 0) * .2 - rx) * .05;
+
+      let phase = 0, gx = 0, gy = 0, rz = -.08, scale = 1, k = 0;
+      if (mode === 'hero') {
+        gy = S.y * pxToWorld;                       // sobe junto com o topo da página
+      } else {
+        phase = p * 11;                             // a fita gira ao descer
+        gx = Math.sin(p * Math.PI * 2.2) * 1.6;
+        gy = Math.sin(p * Math.PI * 3) * 1.6;
+        rz = -.08 + Math.sin(p * Math.PI * 2) * .38;
+        if (mode === 'colar') { k = smooth(.8, .97, p); gy -= k * 6.5; scale = 1 - k * .35; }
+      }
+      updateRibbon(t, phase, amp);
+      ribbonGroup.position.set(gx, gy, 0);
+      ribbonGroup.rotation.set(-.12 + rx, ry, rz);
+      ribbonGroup.scale.setScalar(scale);
+
+      for (const m of pearls) {
+        const d = m.userData;
+        const bob = Math.sin(t * .8 + d.ph) * .22;
+        if (mode === 'colar') {
+          m.visible = true;
+          const appear = d.show ? 1 : smooth(.15, .45, p);
+          m.position.lerpVectors(d.scatter, d.necklace, k);
+          m.position.y += bob * (1 - k);
+          m.position.x += Math.sin(p * 6 + d.ph) * .6 * (1 - k);
+          m.scale.setScalar(THREE.MathUtils.lerp(d.s, .2, k) * appear);
+        } else {
+          m.visible = d.show;
+          m.position.copy(d.scatter); m.position.y += bob + (mode === 'hero' ? S.y * pxToWorld : 0);
+          m.scale.setScalar(d.s);
+        }
+        m.rotation.y = t * .2;
+      }
+      renderer.render(scene, camera);
+    }
+  };
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); scene3d = null; canvas.hidden = true; });
+} else {
+  canvas.hidden = true;
+}
+
+/* ---------- Loop único ---------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, .05); last = now;
+  S.y = scrollY;
+  const v = (S.y - S.lastY) / Math.max(dt, .001); S.lastY = S.y;
+  S.vel += (v - S.vel) * .15;
+  domFrame();
+  if (scene3d) scene3d.frame(dt, false);
+  requestAnimationFrame(loop);
+}
+if (reduce) {
+  // Movimento reduzido: sem animação contínua, cena desenhada parada
+  const still = () => { S.y = scrollY; if (scene3d) scene3d.frame(0, true); };
+  addEventListener('scroll', () => requestAnimationFrame(still), { passive: true });
+  still();
+} else {
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Botões de vidro: luz e inclinação seguem o cursor ---------- */
+for (const b of document.querySelectorAll('.btn, .person')) {
+  const big = b.classList.contains('person'); // cartão largo inclina menos
+  b.addEventListener('pointermove', e => {
+    const r = b.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    b.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+    b.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+    if (finePointer && !reduce) {
+      b.style.setProperty('--rx', ((.5 - y) * (big ? 9 : 16)).toFixed(2) + 'deg');
+      b.style.setProperty('--ry', ((x - .5) * (big ? 6 : 14)).toFixed(2) + 'deg');
+      b.style.setProperty('--tx', ((x - .5) * 8).toFixed(1) + 'px');
+      b.style.setProperty('--ty', ((y - .5) * 6).toFixed(1) + 'px');
+    }
+  });
+  b.addEventListener('pointerleave', () => {
+    for (const p of ['--rx', '--ry', '--tx', '--ty']) b.style.removeProperty(p);
+  });
+}
+</script>
