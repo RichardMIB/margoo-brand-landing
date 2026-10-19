@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens da identidade Margoo Brand (CLAUDE.md → Identidade visual).
+ * Cada token vira variável CSS e utilitário do Tailwind (ex.: --color-ink → text-ink, bg-ink).
+ * A paleta padrão do Tailwind é removida para ninguém usar uma cor fora da marca por engano.
+ */
+@theme {
+  --color-*: initial;
+  --color-ground: #cbbca4;
+  --color-ground-deep: #bdac91;
+  --color-ink: #232024;
+  --color-ink-soft: #463f39;
+  --color-pearl: #f6f0e7;
+  --color-accent: #6b522e;
+  --color-line: rgb(35 32 36 / 0.2);
+  --color-shadow: rgb(52 38 20 / 0.3);
+  --color-white: #fff;
+
+  --font-display: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+  --font-body: 'Jost', 'Futura', 'Avenir Next', system-ui, sans-serif;
+  --font-sans: var(--font-body);
+
+  --tracking-logo: 0.32em;
+  --radius-photo: 3px;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.6;
+    /* clip em vez de hidden: corta o vazamento lateral sem criar contêiner de scroll (não quebra position: sticky) */
+    overflow-x: clip;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Contêiner central do protótipo (.wrap): 1240px com respiro lateral e safe-area */
+@utility wrap {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+
+  @media (min-width: 900px) {
+    padding-left: max(40px, env(safe-area-inset-left, 0px));
+    padding-right: max(40px, env(safe-area-inset-right, 0px));
+  }
+}
