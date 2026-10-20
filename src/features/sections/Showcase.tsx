@@ -3,7 +3,7 @@ import { FloatPhoto } from '../media/FloatPhoto'
 
 /**
  * "Na vitrine agora". Por padrão é um carrossel de arrastar (celular, sem JS, movimento reduzido).
- * Na Fase 3 o motor de scroll liga o modo fixado (.is-pinned): o scroll vertical move o trilho.
+ * A partir de 761px o motor de scroll liga o modo fixado (.is-pinned): o scroll vertical move o trilho.
  */
 export function Showcase() {
   return (

@@ -3,6 +3,7 @@
   /* ---------- Letreiro duplo ---------- */
   .marquee-row {
     display: flex;
+    will-change: transform;
     gap: 56px;
     white-space: nowrap;
     font-family: var(--font-display);
@@ -81,7 +82,7 @@
   /*
    * ---------- Vitrine ----------
    * Padrão (sem JS, celular ≤760px ou movimento reduzido): carrossel de arrastar com scroll-snap.
-   * Na Fase 3 o motor de scroll adiciona .is-pinned no desktop: seção de 300vh com trilho sticky.
+   * O motor de scroll adiciona .is-pinned no desktop: seção de 300vh com trilho sticky.
    */
   .rail-sticky {
     display: flex;
@@ -136,6 +137,32 @@
       margin-top: 70px;
     }
   }
+
+  /*
+   * Modo fixado (só o motor de scroll liga, a partir de 761px e sem movimento reduzido):
+   * a seção tem 300vh, o miolo fica preso na tela e o scroll vertical empurra o trilho.
+   */
+  .rail.is-pinned {
+    height: 300vh;
+  }
+  .rail.is-pinned .rail-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    padding-block: 0;
+    overflow: hidden;
+  }
+  .rail.is-pinned .rail-track {
+    overflow: visible;
+    scroll-snap-type: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    will-change: transform;
+  }
+  .rail.is-pinned .rail-progress {
+    display: block;
+  }
   @media (min-width: 901px) {
     .rail-track {
       padding-left: max(40px, env(safe-area-inset-left, 0px));
@@ -150,7 +177,7 @@
     height: 1px;
     background: var(--color-line);
   }
-  /* Linha cheia por padrão; na Fase 3 o motor a desenha conforme o scroll */
+  /* Linha cheia por padrão (sem JS / movimento reduzido); o motor a desenha conforme o scroll */
   .steps-line > i {
     position: absolute;
     inset: 0;

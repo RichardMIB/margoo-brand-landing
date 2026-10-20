@@ -3,7 +3,7 @@ interface SectionHeadProps {
   lead?: string
 }
 
-/** Cabeçalho de seção: título à esquerda (desliza no scroll, Fase 3) e texto de apoio à direita. */
+/** Cabeçalho de seção: título à esquerda (desliza no scroll) e texto de apoio à direita. */
 export function SectionHead({ title, lead }: SectionHeadProps) {
   return (
     <div className="mb-14 flex flex-wrap items-end justify-between gap-6">

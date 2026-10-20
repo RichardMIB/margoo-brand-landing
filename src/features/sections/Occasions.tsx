@@ -20,12 +20,17 @@ export function Occasions() {
         <SectionHead title={occasions.title} lead={occasions.lead} />
         <div className="occasions">
           {occasions.items.map((item, i) => (
+            // Profundidade no cartão inteiro (foto + título + legenda), não só na foto: no protótipo a
+            // foto descia até ~40px sobre o próprio título, que fica a 14px dela. Só a partir de 901px:
+            // abaixo disso a grade é regular e cartões com profundidades diferentes se cobririam.
             <a
               key={item.title}
               href={item.href}
+              data-depth={DEPTHS[i]}
+              data-depth-from={901}
               className={`occ occ-${i + 1} flex flex-col gap-3.5 no-underline`}
             >
-              <FloatPhoto photo={item.photo} depth={DEPTHS[i]} sizes={SIZES[i]} />
+              <FloatPhoto photo={item.photo} sizes={SIZES[i]} />
               <h3 className="text-[30px]">{item.title}</h3>
               <p className="-mt-2 text-[15px] text-ink-soft">{item.text}</p>
             </a>

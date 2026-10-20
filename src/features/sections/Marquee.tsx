@@ -1,6 +1,6 @@
 import { marquee } from '../../data/content'
 
-/** Quantas vezes a lista se repete: sobra de texto para o deslocamento do scroll (Fase 3) em telas largas. */
+/** Quantas vezes a lista se repete: sobra de texto para o deslocamento do scroll em telas largas. */
 const REPEAT = 3
 const repeat = (words: string[]) => Array.from({ length: REPEAT }, () => words).flat()
 

@@ -10,8 +10,10 @@ import { Occasions } from './features/sections/Occasions'
 import { Showcase } from './features/sections/Showcase'
 import { Steps } from './features/sections/Steps'
 import { Store } from './features/sections/Store'
+import { useScrollEngine } from './features/motion/useScrollEngine'
 
 export default function App() {
+  useScrollEngine()
   return (
     // Camada do conteúdo (z-index 1): na Fase 4 a cena 3D fica fixa atrás, em z-index 0
     <div className="relative z-[1]">

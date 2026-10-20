@@ -51,6 +51,13 @@
     /* clip em vez de hidden: corta o vazamento lateral sem criar contêiner de scroll (não quebra position: sticky) */
     overflow-x: clip;
   }
+  /*
+   * No body o overflow é repassado à janela (vira hidden), e o iOS ainda deixa arrastar para o lado.
+   * No main o clip corta de verdade: títulos deslizando e o letreiro não alargam a página.
+   */
+  main {
+    overflow-x: clip;
+  }
 
   a {
     color: inherit;

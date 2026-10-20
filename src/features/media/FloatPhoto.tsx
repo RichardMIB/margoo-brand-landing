@@ -12,7 +12,7 @@ interface FloatPhotoProps {
   caption?: string
   /** Canto da legenda. Use "right" quando outra foto se sobrepõe ao canto esquerdo. */
   captionSide?: 'left' | 'right'
-  /** Profundidade do parallax (mouse + scroll). Lido pelo motor de scroll na Fase 3. */
+  /** Profundidade do parallax (mouse + scroll). Lido pelo motor de scroll (motion/domEffects). */
   depth?: number
   /** Primeira dobra: carrega já e com prioridade alta (LCP). Fora dela: lazy. */
   priority?: boolean
@@ -23,7 +23,7 @@ interface FloatPhotoProps {
 
 /**
  * Foto que "flutua" sobre o fundo: moldura com sombra longa e raio de 3px.
- * A imagem tem 116% da altura da moldura para deslizar dentro dela (parallax interno, Fase 3).
+ * A imagem tem 116% da altura da moldura para deslizar dentro dela (parallax interno do motor de scroll).
  * A moldura precisa de altura definida (altura explícita ou aspect-ratio) pela classe recebida.
  */
 export function FloatPhoto({
