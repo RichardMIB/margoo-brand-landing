@@ -31,3 +31,6 @@ _scaffold
 *.njsproj
 *.sln
 *.sw?
+
+# Saída do npm run check:layout
+.layout-check

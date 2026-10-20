@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "images": "node scripts/optimize-images.mjs"
+    "images": "node scripts/optimize-images.mjs",
+    "check:layout": "vite build --logLevel warn && node scripts/check-layout.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.8.2",

@@ -13,6 +13,7 @@ npm run test     # Vitest
 npm run lint     # ESLint
 npm run build    # tsc + vite build
 npm run images   # regenera public/img/ a partir de referencia/
+npm run check:layout  # build + Chrome headless: nenhuma foto cobre texto, em 5 larguras e várias posições do scroll
 ```
 
 ## Pendências

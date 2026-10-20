@@ -29,4 +29,9 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    // Funções desse script são serializadas e rodam dentro da página no Chrome
+    files: ['scripts/check-layout.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 ])

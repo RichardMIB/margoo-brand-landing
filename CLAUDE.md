@@ -113,6 +113,7 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 ## Qualidade
 
 - TypeScript strict, ESLint sem erros, `npm run build` passando.
+- Mudou layout ou movimento: `npm run check:layout` passando (Chrome headless, 5 larguras, várias posições de scroll, mouse nos cantos e movimento reduzido; sem dependência nova, usa o Chrome instalado ou `CHROME_PATH`).
 - Acessibilidade: foco visível, links reais (`<a href>`), contraste AA, navegação por teclado, `aria-hidden` no canvas.
 - Responsivo testado em 360, 768 e 1280+.
 - Nunca commitar `.env` (não há segredos neste projeto).
