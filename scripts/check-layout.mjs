@@ -7,12 +7,14 @@
 //   - vazamento lateral: algo além da borda da tela ou rolagem horizontal;
 //   - letreiro: as duas linhas sempre cobrindo da borda esquerda à direita.
 // Depois repete com prefers-reduced-motion: reduce e confere que nada foi animado.
+// Também exige a cena 3D carregada e abre a página direto em #loja, #ocasioes e #atendimento
+// para conferir que o destino continua no topo depois que a vitrine fixada cresce.
 //
 // Sem dependências: o Chrome instalado é controlado pelo protocolo de depuração (CDP) usando o
 // WebSocket nativo do Node 22+, e o servidor é o `vite preview` pela API do próprio Vite.
 //
 // Uso:  npm run check:layout                       (gera o build e testa)
-//       node scripts/check-layout.mjs --url http://localhost:5173 --widths 360,1440
+//       node scripts/check-layout.mjs --url http://localhost:5173 --viewports 360x900,1366x650
 // Saída: .layout-check/ (prints da página e das falhas). Código 1 se achar problema.
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -23,13 +25,15 @@ import { parseArgs } from 'node:util'
 const { values: args } = parseArgs({
   options: {
     url: { type: 'string' },
-    widths: { type: 'string', default: '360,768,1280,1440,1920' },
-    height: { type: 'string', default: '900' },
+    // 1366x650: notebook comum com barra do navegador, o caso mais apertado da vitrine fixada
+    viewports: { type: 'string', default: '360x900,768x900,1280x900,1440x900,1920x900,1366x650' },
+    'no-scene': { type: 'boolean', default: false },
     out: { type: 'string', default: '.layout-check' },
   },
 })
-const WIDTHS = args.widths.split(',').map(Number)
-const VH = Number(args.height)
+const VIEWPORTS = args.viewports.split(',').map((v) => v.split('x').map(Number))
+const REQUIRE_SCENE = !args['no-scene']
+const HASH_TARGETS = ['ocasioes', 'loja', 'atendimento']
 const OUT = path.resolve(args.out)
 const DESKTOP = 901 // a partir daqui o mouse mexe nas fotos (ponteiro fino)
 const MAX_FAIL_SHOTS = 12
@@ -69,7 +73,18 @@ async function launchChrome() {
   const port = 9300 + Math.floor(Math.random() * 600)
   const proc = spawn(
     findChrome(),
-    ['--headless=new', `--remote-debugging-port=${port}`, '--no-first-run', '--hide-scrollbars', `--user-data-dir=${profile}`, 'about:blank'],
+    [
+      '--headless=new',
+      `--remote-debugging-port=${port}`,
+      '--no-first-run',
+      '--hide-scrollbars',
+      // A cena 3D não carrega com WebGL por software (failIfMajorPerformanceCaveat): força a GPU
+      '--enable-gpu',
+      '--ignore-gpu-blocklist',
+      ...(process.platform === 'win32' ? ['--use-angle=d3d11'] : []),
+      `--user-data-dir=${profile}`,
+      'about:blank',
+    ],
     { stdio: 'ignore' },
   )
   let target
@@ -237,6 +252,21 @@ function motionState() {
   return problems
 }
 
+/** Espera a cena 3D (lazy, depois do load e de um momento ocioso). */
+async function waitScene() {
+  for (let i = 0; i < 80; i++) {
+    const c = document.querySelector('canvas')
+    if (c && c.width > 0) return true
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return false
+}
+
+/** Link direto: o destino precisa estar no topo da tela. */
+function hashTargetTop(id) {
+  return Math.round(document.getElementById(id).getBoundingClientRect().top)
+}
+
 // ---------- Execução ----------
 
 const preview = args.url ? null : await startPreview()
@@ -260,58 +290,74 @@ async function record(ctx, problems) {
   failures.push(`   ↳ print: ${path.join(args.out, `falha-${shots}.jpg`)}`)
 }
 
-async function load(width, reduced) {
-  await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: VH, deviceScaleFactor: 1, mobile: width < 761 })
+async function load(width, height, reduced, hash = '') {
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 761 })
   await cdp.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }],
   })
-  await cdp.send('Page.navigate', { url })
+  // Query única a cada carga: só trocar o #hash na mesma URL não recarregaria a página
+  await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}${hash}` })
   await sleep(1200)
+  const scene = await cdp.evaluate(waitScene)
+  if (REQUIRE_SCENE && !scene) failures.push(`${width}x${height}${reduced ? ' (movimento reduzido)' : ''}: cena 3D não carregou (headless sem GPU? rode com --no-scene)`)
+  if (hash) return
   // Carrega todas as fotos lazy: o print sai completo e nenhuma medida depende de imagem chegando
   await cdp.evaluate(() => Promise.all([...document.images].map((i) => ((i.loading = 'eager'), i.decode().catch(() => {})))))
   await cdp.evaluate(settle, 5)
 }
 
-const mouseStates = (w) =>
+const mouseStates = (w, h) =>
   w >= DESKTOP
     ? [
-        ['mouse no centro', w / 2, VH / 2],
+        ['mouse no centro', w / 2, h / 2],
         ['mouse no canto superior esquerdo', 0, 0],
-        ['mouse no canto inferior direito', w - 1, VH - 1],
+        ['mouse no canto inferior direito', w - 1, h - 1],
       ]
     : [['toque', null, null]]
 
 await cdp.send('Page.enable')
 let checked = 0
-for (const w of WIDTHS) {
+let loads = 0
+for (const [w, h] of VIEWPORTS) {
+  const vp = `${w}x${h}`
   // ----- Com movimento -----
-  await load(w, false)
-  await record(`${w}px topo`, await cdp.evaluate(motionState))
+  await load(w, h, false)
+  await record(`${vp} topo`, await cdp.evaluate(motionState))
   const full = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 70, captureBeyondViewport: true })
-  writeFileSync(path.join(OUT, `pagina-${w}.jpg`), Buffer.from(full.data, 'base64'))
+  writeFileSync(path.join(OUT, `pagina-${vp}.jpg`), Buffer.from(full.data, 'base64'))
 
   const positions = await cdp.evaluate(scrollPositions)
-  for (const [mouseLabel, mx, my] of mouseStates(w)) {
+  for (const [mouseLabel, mx, my] of mouseStates(w, h)) {
     if (mx !== null) {
       await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: mx, y: my })
       await sleep(1300) // o motor suaviza o mouse em ~1s
     }
     for (const [label, y] of positions) {
       await scrollTo(y)
-      await record(`${w}px, y=${y} (${label}), ${mouseLabel}`, await cdp.evaluate(measure))
+      await record(`${vp}, y=${y} (${label}), ${mouseLabel}`, await cdp.evaluate(measure))
       checked++
     }
   }
 
+  // ----- Link direto com #destino -----
+  for (const id of HASH_TARGETS) {
+    await load(w, h, false, `#${id}`)
+    await sleep(1500) // fontes, vitrine fixada e cena 3D já mudaram a página
+    await cdp.evaluate(settle, 3)
+    const top = await cdp.evaluate(hashTargetTop, id)
+    await record(`${vp}, link direto #${id}`, Math.abs(top) > 2 ? [`destino a ${top}px do topo da tela`] : [])
+    checked++
+  }
+
   // ----- Movimento reduzido -----
-  await load(w, true)
+  await load(w, h, true)
   for (const [label, y] of (await cdp.evaluate(scrollPositions)).filter(([l]) => l !== 'varredura')) {
     await scrollTo(y)
     const problems = [...(await cdp.evaluate(measure)), ...(await cdp.evaluate(staticState))]
-    await record(`${w}px, y=${y} (${label}), movimento reduzido`, problems)
+    await record(`${vp}, y=${y} (${label}), movimento reduzido`, problems)
     checked++
   }
-  console.log(`✓ ${w}px conferido`)
+  console.log(`✓ ${vp} conferido`)
 }
 
 cdp.close()
@@ -321,5 +367,5 @@ if (failures.length) {
   console.error(`\n✗ ${failures.filter((f) => !f.startsWith('   ')).length} problema(s) em ${checked} quadros:\n${failures.join('\n')}`)
   process.exit(1)
 }
-console.log(`\n✓ Nenhum problema em ${checked} quadros (${WIDTHS.join(', ')}px; com e sem movimento). Prints em ${args.out}/`)
+console.log(`\n✓ Nenhum problema em ${checked} quadros (${VIEWPORTS.map((v) => v.join('x')).join(', ')}; com e sem movimento, cena 3D ${REQUIRE_SCENE ? 'ligada' : 'opcional'}). Prints em ${args.out}/`)
 process.exit(0)

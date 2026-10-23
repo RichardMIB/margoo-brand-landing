@@ -92,3 +92,19 @@
     padding-right: max(40px, env(safe-area-inset-right, 0px));
   }
 }
+
+/* Cena 3D: entra com fade quando os shaders terminam de compilar */
+@layer components {
+  .scene-layer {
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+  .scene-layer.is-ready {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scene-layer {
+      transition: none;
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import { damp, lerp } from '../../lib/math'
+
 /**
  * Motor único de scroll: o ÚNICO dono do requestAnimationFrame da página.
  *
@@ -5,6 +7,11 @@
  * a todos os clientes registrados (efeitos do DOM agora; a cena 3D quando o lazy carregar).
  * Clientes entram e saem a qualquer momento: a página funciona sem a cena e não quebra se ela
  * nunca carregar.
+ *
+ * Toda suavização usa `damp` (depende do tempo real, não da taxa de quadros): a 60 Hz e a
+ * 120 Hz o mouse e a velocidade chegam ao mesmo valor no mesmo tempo.
+ *
+ * Aba oculta: o loop para de vez e volta ao reabrir.
  *
  * Movimento reduzido: não há loop contínuo. Os clientes recebem um quadro parado (`still`)
  * só quando o scroll ou o tamanho da tela mudam, para se desenharem em repouso.
@@ -21,6 +28,8 @@ export interface FrameState {
   mouseY: number
   vw: number
   vh: number
+  /** Quanto a página rola no total (altura do documento - altura da tela). */
+  maxScroll: number
   /** true = movimento reduzido: desenhe em repouso, sem animar. */
   still: boolean
 }
@@ -36,19 +45,22 @@ export interface EngineEnv {
   cancelFrame(id: number): void
   now(): number
   scrollY(): number
-  viewport(): { vw: number; vh: number }
+  viewport(): { vw: number; vh: number; maxScroll: number }
   /** Liga os ouvintes externos (scroll, resize, mouse, mudança de preferência). Devolve a limpeza. */
   listen(handlers: EnvHandlers): () => void
   prefersReducedMotion(): boolean
+  hidden(): boolean
 }
 
 export interface EnvHandlers {
   onPointer(x: number, y: number): void
   onScrollOrResize(): void
   onReducedMotionChange(): void
+  onVisibilityChange(): void
 }
 
 const MAX_DT = 0.05
+/** Frações por quadro de 60 Hz (valores do protótipo), convertidas pelo damp. */
 const VELOCITY_SMOOTHING = 0.15
 const MOUSE_SMOOTHING = 0.06
 
@@ -61,7 +73,7 @@ export function createScrollEngine(getEnv: () => EngineEnv = browserEnv) {
   let last = 0
   let lastY = 0
   const target = { x: 0, y: 0 }
-  const state: FrameState = { dt: 0, scrollY: 0, velocity: 0, mouseX: 0, mouseY: 0, vw: 0, vh: 0, still: false }
+  const state: FrameState = { dt: 0, scrollY: 0, velocity: 0, mouseX: 0, mouseY: 0, vw: 0, vh: 0, maxScroll: 0, still: false }
 
   const emit = () => {
     for (const c of clients) c.frame(state)
@@ -77,9 +89,10 @@ export function createScrollEngine(getEnv: () => EngineEnv = browserEnv) {
     Object.assign(state, env.viewport())
     state.dt = dt
     state.scrollY = y
-    state.velocity += (v - state.velocity) * VELOCITY_SMOOTHING
-    state.mouseX += (target.x - state.mouseX) * MOUSE_SMOOTHING
-    state.mouseY += (target.y - state.mouseY) * MOUSE_SMOOTHING
+    state.velocity = lerp(state.velocity, v, damp(VELOCITY_SMOOTHING, dt))
+    const m = damp(MOUSE_SMOOTHING, dt)
+    state.mouseX = lerp(state.mouseX, target.x, m)
+    state.mouseY = lerp(state.mouseY, target.y, m)
     state.still = false
     emit()
     rafId = env.requestFrame(loop)
@@ -105,6 +118,7 @@ export function createScrollEngine(getEnv: () => EngineEnv = browserEnv) {
     if (rafId !== null) env.cancelFrame(rafId)
     rafId = null
     pendingStill = false
+    if (env.hidden()) return // volta pelo onVisibilityChange
     if (env.prefersReducedMotion()) {
       requestStill()
     } else {
@@ -129,6 +143,7 @@ export function createScrollEngine(getEnv: () => EngineEnv = browserEnv) {
           if (env?.prefersReducedMotion()) requestStill()
         },
         onReducedMotionChange: run,
+        onVisibilityChange: run,
       })
       run()
     },
@@ -168,9 +183,14 @@ function browserEnv(): EngineEnv {
     cancelFrame: (id) => cancelAnimationFrame(id),
     now: () => performance.now(),
     scrollY: () => window.scrollY,
-    viewport: () => ({ vw: window.innerWidth, vh: window.innerHeight }),
+    viewport: () => ({
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+      maxScroll: Math.max(document.documentElement.scrollHeight - window.innerHeight, 0),
+    }),
     prefersReducedMotion: () => reduce.matches,
-    listen({ onPointer, onScrollOrResize, onReducedMotionChange }) {
+    hidden: () => document.hidden,
+    listen({ onPointer, onScrollOrResize, onReducedMotionChange, onVisibilityChange }) {
       const pointer = (e: PointerEvent) => {
         if (finePointer.matches) onPointer(e.clientX / window.innerWidth - 0.5, e.clientY / window.innerHeight - 0.5)
       }
@@ -179,7 +199,9 @@ function browserEnv(): EngineEnv {
       window.addEventListener('scroll', onScrollOrResize, opts)
       window.addEventListener('resize', onScrollOrResize, opts)
       reduce.addEventListener('change', onReducedMotionChange)
+      document.addEventListener('visibilitychange', onVisibilityChange)
       return () => {
+        document.removeEventListener('visibilitychange', onVisibilityChange)
         window.removeEventListener('pointermove', pointer)
         window.removeEventListener('scroll', onScrollOrResize)
         window.removeEventListener('resize', onScrollOrResize)

@@ -53,6 +53,28 @@ export function createDomEffects(root: ParentNode = document): FrameClient {
     touched.add(el)
   }
 
+  /**
+   * Link direto (/#loja): o HTML chega vazio (SPA), então o navegador procura o destino antes de
+   * ele existir e desiste, deixando a página no topo. Depois, a vitrine fixada (+200vh) e as fontes
+   * mudam as alturas. Enquanto a pessoa não rolar por conta própria, o destino é reposicionado na
+   * montagem, quando as fontes chegam e a cada troca do modo da vitrine.
+   */
+  let userMoved = false
+  let disposed = false
+  const intents = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
+  const onIntent = () => {
+    userMoved = true
+    for (const ev of intents) window.removeEventListener(ev, onIntent)
+  }
+  for (const ev of intents) window.addEventListener(ev, onIntent, { passive: true })
+  const followHash = () => {
+    if (userMoved || disposed) return
+    const id = decodeURIComponent(window.location.hash.slice(1))
+    if (id) document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'instant' })
+  }
+  followHash()
+  void document.fonts?.ready.then(followHash)
+
   let isStill = true // começa "estático" (estado do HTML); o primeiro quadro animado liga os efeitos
   let pinned = false
 
@@ -64,6 +86,7 @@ export function createDomEffects(root: ParentNode = document): FrameClient {
       track.style.transform = ''
       written.delete(track)
     }
+    followHash()
   }
 
   /** Teclado na vitrine fixada: Tab até um item fora da tela rola a página até ele aparecer. */
@@ -163,6 +186,8 @@ export function createDomEffects(root: ParentNode = document): FrameClient {
   return {
     frame,
     dispose() {
+      disposed = true
+      onIntent()
       rail?.removeEventListener('focusin', onFocusIn)
       reset()
     },

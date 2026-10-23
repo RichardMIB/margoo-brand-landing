@@ -14,3 +14,11 @@ export const smooth = (edge0: number, edge1: number, v: number): number => {
   const t = clamp((v - edge0) / (edge1 - edge0), 0, 1)
   return t * t * (3 - 2 * t)
 }
+
+/**
+ * Fator de suavização independente da taxa de quadros.
+ * `k` é a fração que o valor anda em direção ao alvo a cada quadro de 60 Hz (ex.: 0.06).
+ * Com `dt` em segundos: 1 - (1 - k)^(dt * 60). A 120 Hz cada quadro anda menos, e em 1 s
+ * o resultado é o mesmo que a 60 Hz. Uso: atual = lerp(atual, alvo, damp(k, dt)).
+ */
+export const damp = (k: number, dt: number): number => 1 - Math.pow(1 - k, dt * 60)

@@ -9,6 +9,7 @@ function fakeEnv(opts: { reduce?: boolean } = {}) {
   const fake = {
     y: 0,
     reduce: opts.reduce ?? false,
+    hidden: false,
     handlers: null as EnvHandlers | null,
     listening: false,
     /** Avança o relógio e roda os quadros pendentes. */
@@ -30,8 +31,9 @@ function fakeEnv(opts: { reduce?: boolean } = {}) {
     cancelFrame: (id) => void queue.delete(id),
     now: () => clock,
     scrollY: () => fake.y,
-    viewport: () => ({ vw: 1440, vh: 900 }),
+    viewport: () => ({ vw: 1440, vh: 900, maxScroll: 8000 }),
     prefersReducedMotion: () => fake.reduce,
+    hidden: () => fake.hidden,
     listen(h) {
       fake.handlers = h
       fake.listening = true
@@ -125,6 +127,48 @@ describe('createScrollEngine', () => {
     expect(fake.pending).toBe(0)
     expect(fake.listening).toBe(false)
     expect(engine.running).toBe(false)
+  })
+
+  describe('independente da taxa de quadros', () => {
+    /** Roda `seconds` a `hz` quadros/s com o mouse no canto e o scroll a 1200 px/s. */
+    const simulate = (hz: number, seconds: number) => {
+      const { fake, env } = fakeEnv()
+      const engine = createScrollEngine(() => env)
+      const { frames, client } = recorder()
+      engine.add(client)
+      engine.start()
+      fake.handlers!.onPointer(0.5, -0.5)
+      for (let i = 0; i < hz * seconds; i++) {
+        fake.y += 1200 / hz
+        fake.tick(1000 / hz)
+      }
+      return frames.at(-1)!
+    }
+
+    it.each([0.25, 0.5, 1])('60 Hz e 120 Hz dão o mesmo mouse e a mesma velocidade após %ss', (seconds) => {
+      const at60 = simulate(60, seconds)
+      const at120 = simulate(120, seconds)
+      expect(at120.mouseX).toBeCloseTo(at60.mouseX, 6)
+      expect(at120.mouseY).toBeCloseTo(at60.mouseY, 6)
+      expect(at120.velocity).toBeCloseTo(at60.velocity, 3)
+      expect(at120.scrollY).toBeCloseTo(at60.scrollY, 6)
+    })
+
+    it('144 Hz também bate com 60 Hz', () => {
+      expect(simulate(144, 0.5).mouseX).toBeCloseTo(simulate(60, 0.5).mouseX, 6)
+    })
+  })
+
+  it('aba oculta para o loop; ao voltar, retoma', () => {
+    const { fake, env } = fakeEnv()
+    const engine = createScrollEngine(() => env)
+    engine.start()
+    fake.hidden = true
+    fake.handlers!.onVisibilityChange()
+    expect(fake.pending).toBe(0)
+    fake.hidden = false
+    fake.handlers!.onVisibilityChange()
+    expect(fake.pending).toBe(1)
   })
 
   describe('movimento reduzido', () => {

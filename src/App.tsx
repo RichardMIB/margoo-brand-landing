@@ -11,31 +11,35 @@ import { Showcase } from './features/sections/Showcase'
 import { Steps } from './features/sections/Steps'
 import { Store } from './features/sections/Store'
 import { useScrollEngine } from './features/motion/useScrollEngine'
+import { SceneLayer } from './features/scene3d/SceneLayer'
 
 export default function App() {
   useScrollEngine()
   return (
-    // Camada do conteúdo (z-index 1): na Fase 4 a cena 3D fica fixa atrás, em z-index 0
-    <div className="relative z-[1]">
-      <a
-        href={`#${a11y.mainId}`}
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-10 focus:rounded-full focus:bg-pearl focus:px-5 focus:py-3"
-      >
-        {a11y.skipLink}
-      </a>
-      <Header />
-      <main id={a11y.mainId}>
-        <Hero />
-        <Marquee />
-        <Facts />
-        <Occasions />
-        <Showcase />
-        <Steps />
-        <Store />
-        <Contact />
-        <Finale />
-      </main>
-      <Footer />
-    </div>
+    <>
+      {/* Cena 3D fixa atrás (z-index 0), carregada depois do conteúdo */}
+      <SceneLayer />
+      <div className="relative z-[1]">
+        <a
+          href={`#${a11y.mainId}`}
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-10 focus:rounded-full focus:bg-pearl focus:px-5 focus:py-3"
+        >
+          {a11y.skipLink}
+        </a>
+        <Header />
+        <main id={a11y.mainId}>
+          <Hero />
+          <Marquee />
+          <Facts />
+          <Occasions />
+          <Showcase />
+          <Steps />
+          <Store />
+          <Contact />
+          <Finale />
+        </main>
+        <Footer />
+      </div>
+    </>
   )
 }
