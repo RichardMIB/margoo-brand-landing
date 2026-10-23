@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- Página auxiliar do scripts/bake-envmap.mjs: gera o PMREM no Chrome (com GPU) e devolve os pixels. -->
+<meta charset="utf-8" />
+<title>bake envmap</title>
+<canvas id="c" width="16" height="16"></canvas>
+<script type="module">
+  import { PMREMGenerator, WebGLRenderer } from 'three'
+  import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+
+  /** Mesma chamada que a página fazia ao vivo; devolve o CubeUV em half float, em base64. */
+  window.bake = ({ size, sigma, near, far }) => {
+    const renderer = new WebGLRenderer({ canvas: document.getElementById('c') })
+    const pmrem = new PMREMGenerator(renderer)
+    const room = new RoomEnvironment()
+    const target = pmrem.fromScene(room, sigma, near, far, { size })
+    const { width, height } = target
+    const pixels = new Uint16Array(width * height * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels)
+    const bytes = new Uint8Array(pixels.buffer)
+    let bin = ''
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+    room.dispose()
+    pmrem.dispose()
+    target.dispose()
+    renderer.dispose()
+    return { width, height, data: btoa(bin) }
+  }
+  window.bakeReady = true
+</script>

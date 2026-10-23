@@ -8,14 +8,13 @@ import {
   InstancedMesh,
   Matrix4,
   MeshPhysicalMaterial,
-  PMREMGenerator,
   type PerspectiveCamera,
   PlaneGeometry,
   Quaternion,
   SphereGeometry,
+  type Texture,
   Vector3,
 } from 'three'
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { damp, lerp } from '../../lib/math'
 import { scrollEngine, type FrameClient, type FrameState } from '../motion/scrollEngine'
 import {
@@ -30,16 +29,12 @@ import {
   windAmplitude,
   type PearlPose,
 } from './choreography'
+import { loadEnvironment } from './environment'
 import { RIBBON_ACROSS, RIBBON_SEGMENTS, writeRibbonPositions } from './ribbon'
 
 /** Frações por quadro de 60 Hz (protótipo), convertidas pelo damp. */
 const WIND_SMOOTHING = 0.08
 const TILT_SMOOTHING = 0.05
-/**
- * Resolução do reflexo de ambiente. 128 aceita rugosidade a partir de 0.076 (o menor valor dos
- * materiais é 0.1, o verniz das pérolas) e custa 1/4 do padrão de 256 para gerar.
- */
-const ENV_SIZE = 128
 
 interface RibbonSceneProps {
   /** Shaders compilados e primeiro quadro pedido: a camada pode aparecer. */
@@ -50,9 +45,9 @@ interface RibbonSceneProps {
  * Fita de cetim caramelo + 25 pérolas. Não tem loop próprio: registra-se no scrollEngine,
  * atualiza a cena a cada quadro do motor e pede um único desenho ao R3F com `advance()`.
  *
- * Largada sem travar a página: os shaders (MeshPhysicalMaterial com sheen, clearcoat e
- * iridescência são pesados) compilam em paralelo com `compileAsync`; só depois a cena entra
- * no motor e aparece.
+ * Largada sem travar a página: o reflexo de ambiente vem pré-calculado do build (environment.ts)
+ * e os shaders (MeshPhysicalMaterial com sheen, clearcoat e iridescência são pesados) compilam
+ * em paralelo com `compileAsync`; só depois a cena entra no motor e aparece.
  */
 export function RibbonScene({ onReady }: RibbonSceneProps) {
   const gl = useThree((s) => s.gl)
@@ -64,6 +59,7 @@ export function RibbonScene({ onReady }: RibbonSceneProps) {
   const ribbonGroup = useRef<Group>(null)
   const pearlMesh = useRef<InstancedMesh>(null)
   const redrawStill = useRef<(() => void) | null>(null)
+  const [envReady, setEnvReady] = useState(false)
   const [compiled, setCompiled] = useState(false)
 
   const assets = useMemo(
@@ -94,18 +90,25 @@ export function RibbonScene({ onReady }: RibbonSceneProps) {
   )
   const pearls = useMemo(() => createPearls(), [])
 
-  // Reflexos do cetim e das pérolas: estúdio neutro do three (sem HDR externo)
+  // Reflexos do cetim e das pérolas: estúdio neutro do three (RoomEnvironment), pré-calculado
   useEffect(() => {
     const { scene } = getState() // mutação imperativa da cena: pelo estado do R3F, não pelo valor do hook
-    const pmrem = new PMREMGenerator(gl)
-    const room = new RoomEnvironment()
-    const env = pmrem.fromScene(room, 0.04, 0.1, 100, { size: ENV_SIZE }).texture
-    scene.environment = env
-    room.dispose()
-    pmrem.dispose()
+    const abort = new AbortController()
+    let env: Texture | null = null
+    loadEnvironment(gl, abort.signal).then(
+      (texture) => {
+        env = texture
+        scene.environment = texture
+        setEnvReady(true)
+      },
+      () => {
+        /* abortado no desmonte */
+      },
+    )
     return () => {
+      abort.abort()
       scene.environment = null
-      env.dispose()
+      env?.dispose()
     }
   }, [gl, getState])
 
@@ -116,9 +119,10 @@ export function RibbonScene({ onReady }: RibbonSceneProps) {
     [assets],
   )
 
-  // Compila os programas da cena (já com o ambiente) fora da thread principal, quando o
-  // navegador suporta KHR_parallel_shader_compile; senão, compila do jeito normal.
+  // Compila os programas da cena (já com o ambiente: ele muda o shader) fora da thread principal,
+  // quando o navegador suporta KHR_parallel_shader_compile; senão, compila do jeito normal.
   useEffect(() => {
+    if (!envReady) return
     let cancelled = false
     const done = () => {
       if (!cancelled) setCompiled(true)
@@ -127,7 +131,7 @@ export function RibbonScene({ onReady }: RibbonSceneProps) {
     return () => {
       cancelled = true
     }
-  }, [gl, camera, getState])
+  }, [envReady, gl, camera, getState])
 
   // Cliente do motor: toda a animação acontece aqui
   useEffect(() => {

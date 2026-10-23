@@ -66,12 +66,13 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 ## 3D: fita de cetim + colar de pérolas (modo aprovado: "Fio + colar")
 
 - Canvas **fixo** atrás da página inteira (`position: fixed; inset: 0; z-index: 0; pointer-events: none; aria-hidden`), conteúdo em `z-index: 1`.
-- **Fita**: `PlaneGeometry` 240×20 segmentos, vértices recalculados por quadro (seno/cosseno, torção ao longo do comprimento, dobras finas). `MeshPhysicalMaterial` com sheen + clearcoat, `RoomEnvironment` via PMREM. Copiar a função `ribbonAt` do protótipo.
+- **Fita**: `PlaneGeometry` 240×20 segmentos, vértices recalculados por quadro (seno/cosseno, torção ao longo do comprimento, dobras finas). `MeshPhysicalMaterial` com sheen + clearcoat, `RoomEnvironment` via PMREM **pré-calculado no build** (ver abaixo). Copiar a função `ribbonAt` do protótipo.
+- **Reflexo pré-calculado (ADR 003):** `npm run bake:env` gera `public/envmap/room-128.rgbe.bin` + `src/features/scene3d/envmap.json` (versionados no git). **Ao atualizar o three, rode `npm run bake:env` e faça commit dos dois arquivos**; o teste `envmap.test.ts` falha enquanto a versão gravada for diferente. Gerar o PMREM ao vivo travava a página ~2,3 s.
 - **Scroll** (progresso p de 0 a 1 da página): a fita gira (`phase = p*11`), desloca em x/y e muda a rotação z. A partir de p≈0.8 ela desce e encolhe.
 - **Vento**: velocidade do scroll aumenta a amplitude da ondulação; parado, acalma.
 - **Pérolas**: 25 esferas iridescentes. Começam espalhadas (6 visíveis no topo, as outras aparecem entre p 0.15 e 0.45) e entre p 0.8 e 0.97 interpolam para um colar em U que pende dos cantos de cima da tela e passa por baixo do título final. Posições do colar recalculadas no resize a partir da largura visível.
 - Mouse (só ponteiro fino): leve rotação amortecida da cena.
-- **Performance obrigatória**: canvas carregado com `React.lazy` depois do conteúdo (não pode atrasar o LCP), `dpr` máx. 1.75, pausar quando a aba está oculta, liberar recursos no unmount, tratar `webglcontextlost`. Sem WebGL → página funciona sem a cena.
+- **Performance obrigatória**: canvas carregado com `React.lazy` depois do conteúdo (não pode atrasar o LCP: a cena espera `load` + fontes + primeiro LCP + momento ocioso; medições em `docs/performance.md`), shaders com `compileAsync`, sem cena em WebGL por software (`failIfMajorPerformanceCaveat`), `dpr` máx. 1.75, pausar quando a aba está oculta, liberar recursos no unmount, tratar `webglcontextlost`. Sem WebGL → página funciona sem a cena.
 - **Movimento reduzido** (`prefers-reduced-motion`): cena desenhada parada, sem loop contínuo.
 
 ## Efeitos de scroll no DOM (um motor rAF só)
@@ -113,7 +114,8 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 ## Qualidade
 
 - TypeScript strict, ESLint sem erros, `npm run build` passando.
-- Mudou layout ou movimento: `npm run check:layout` passando (Chrome headless, 5 larguras, várias posições de scroll, mouse nos cantos e movimento reduzido; sem dependência nova, usa o Chrome instalado ou `CHROME_PATH`).
+- Mudou layout ou movimento: `npm run check:layout` passando (Chrome headless com GPU, 5 larguras + 1366×650, várias posições de scroll, mouse nos cantos, movimento reduzido, links diretos com `#` e cena 3D ligada; sem dependência nova, usa o Chrome instalado ou `CHROME_PATH`; em máquina sem GPU use `--no-scene`).
+- Mudou a cena 3D ou o carregamento: medir o Lighthouse Mobile (mediana de 3, comando em `docs/performance.md`); LCP no máximo 10% acima da linha de base.
 - Acessibilidade: foco visível, links reais (`<a href>`), contraste AA, navegação por teclado, `aria-hidden` no canvas.
 - Responsivo testado em 360, 768 e 1280+.
 - Nunca commitar `.env` (não há segredos neste projeto).

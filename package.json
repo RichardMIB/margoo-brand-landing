@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "images": "node scripts/optimize-images.mjs",
-    "check:layout": "vite build --logLevel warn && node scripts/check-layout.mjs"
+    "check:layout": "vite build --logLevel warn && node scripts/check-layout.mjs",
+    "bake:env": "node scripts/bake-envmap.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.8.2",

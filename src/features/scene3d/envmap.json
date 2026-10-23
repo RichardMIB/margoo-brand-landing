@@ -1,0 +1,14 @@
+{
+  "$comment": "Gerado por npm run bake:env. Regerar ao atualizar o three (ADR 003).",
+  "three": "0.186.1",
+  "file": "envmap/room-128.rgbe.bin",
+  "format": "rgbe-paeth-gzip",
+  "size": 128,
+  "width": 384,
+  "height": 512,
+  "sigma": 0.04,
+  "near": 0.1,
+  "far": 100,
+  "bytes": 102641,
+  "sha256": "3af26f9fc6b37868de19ae46c46819b43ce259fc0b298fcd7b3381d11e516a8d"
+}

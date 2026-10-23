@@ -21,21 +21,48 @@ export function canRenderScene(): boolean {
   }
 }
 
-/** Depois do evento load e de um momento ocioso: a cena nunca disputa com o conteúdo (LCP). */
+/** Folga máxima esperando o navegador ficar ocioso antes de iniciar a cena mesmo assim. */
+const IDLE_TIMEOUT_MS = 3000
+/** Sem requestIdleCallback (Safari): espera fixa depois da página pronta. */
+const SAFARI_DELAY_MS = 1200
+
+/** Primeira pintura do maior elemento (LCP). Sem a API (Safari), resolve na hora. */
+function firstLargestPaint(): Promise<void> {
+  if (!PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')) return Promise.resolve()
+  return new Promise((resolve) => {
+    const po = new PerformanceObserver((list) => {
+      if (list.getEntries().length === 0) return
+      po.disconnect()
+      resolve()
+    })
+    po.observe({ type: 'largest-contentful-paint', buffered: true })
+  })
+}
+
+const pageLoaded = () =>
+  document.readyState === 'complete'
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => window.addEventListener('load', () => resolve(), { once: true }))
+
+/**
+ * Chama `cb` quando a cena não disputa mais com o conteúdo: depois do load, das fontes e do
+ * primeiro LCP, e então num momento ocioso. Medido: começando logo após o load, o download e a
+ * execução do 3D caíam antes do LCP e o Lighthouse somava isso ao LCP (docs/performance.md).
+ */
 export function whenPageIdle(cb: () => void): () => void {
   let cancelled = false
   let idleId: number | undefined
   let timerId: ReturnType<typeof setTimeout> | undefined
-  const schedule = () => {
-    if (cancelled) return
-    if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(cb, { timeout: 2500 })
-    else timerId = setTimeout(cb, 300)
+  const run = () => {
+    if (!cancelled) cb()
   }
-  if (document.readyState === 'complete') schedule()
-  else window.addEventListener('load', schedule, { once: true })
+  void Promise.all([pageLoaded(), document.fonts?.ready, firstLargestPaint()]).then(() => {
+    if (cancelled) return
+    if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(run, { timeout: IDLE_TIMEOUT_MS })
+    else timerId = setTimeout(run, SAFARI_DELAY_MS)
+  })
   return () => {
     cancelled = true
-    window.removeEventListener('load', schedule)
     if (idleId !== undefined) window.cancelIdleCallback(idleId)
     if (timerId !== undefined) clearTimeout(timerId)
   }

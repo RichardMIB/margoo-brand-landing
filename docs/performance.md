@@ -28,27 +28,36 @@ O atraso de renderização vem de duas coisas:
 
 Meta da Fase 4: a cena 3D carregada com lazy **não pode piorar o LCP em mais de 10%** (teto: 3,32 s na mediana).
 
-## Fase 4 — com a cena 3D (em andamento, 22/10/2026)
+## Fase 4 — com a cena 3D (fechada em 22/10/2026)
 
 Mesmo método (Lighthouse 12.8.2 Mobile, 3 rodadas, mediana). O Chrome do Lighthouse local usou a GPU da máquina (Intel HD Graphics, D3D11).
 
-| Versão | Performance | LCP | CLS | TBT | Observação |
+| Versão | Performance | LCP | FCP | CLS | TBT |
 |---|---|---|---|---|---|
-| Linha de base (sem 3D) | 86 | 3,02 s | 0 | 0 ms | |
-| 3D, primeira versão | 44 | 4,28 s (+42%) | 0 | ~9.900 ms | shaders e ambiente compilados de forma síncrona |
-| 3D + `compileAsync` + sem cena em WebGL por software | 45 | 4,16 s (+38%) | 0 | ~9.000 ms | ainda acima do teto de +10% (3,32 s) |
+| **Linha de base** (sem 3D) | 86 | **3,02 s** | 2,80 s | 0 | 0 ms |
+| 3D antes (primeira versão) | 44 | 4,28 s (+42%) | 3,42 s | 0 | ~9.900 ms |
+| 3D + `compileAsync` + sem cena em WebGL por software | 45 | 4,16 s (+38%) | 3,32 s | 0 | ~9.000 ms |
+| 3D + reflexo pré-calculado (ADR 003) | 49 | 4,15 s (+37%) | 3,30 s | 0 | 1.696 ms |
+| **3D depois** (+ início depois do LCP e ocioso) | 61 | **3,00 s (−1%)** | 2,71 s | 0 | 1.478 ms |
 
-### Onde está o custo (medido com tarefas longas, CPU 4× mais lenta, GPU real)
+Critério da fase: LCP no máximo 10% acima da linha de base (3,32 s). **Cumprido: 3,00 s.**
 
-| Etapa da largada da cena | Antes | Depois |
+### O que cada passo resolveu
+
+1. **Shaders do MeshPhysicalMaterial**: `compileAsync` com `KHR_parallel_shader_compile`. Trava na thread principal de 1,5 s → 10 ms (a compilação, ~0,9 s, vai para outra thread).
+2. **Sem GPU** (WebGL por software, ambiente do PageSpeed Insights): cada quadro travava ~500 ms. A cena não carrega nesse caso (`failIfMajorPerformanceCaveat`).
+3. **Reflexo de ambiente (PMREM)**: gerado ao vivo, compilava os shaders internos do PMREM de forma síncrona: **2,2–2,5 s travando**, independente da resolução (32 custava o mesmo que 128). Agora vem pré-calculado do build (`npm run bake:env`, 100 kB) e não roda nenhum shader extra. Maior tarefa longa da largada: 2.336 ms → 189 ms.
+4. **Momento de início**: começando logo após o `load` (~1,2 s no trace), o download e a execução do pedaço do 3D (245 kB gzip) caíam antes do LCP observado (~2,6 s), e o modo simulado do Lighthouse somava esse trabalho ao LCP. Agora a cena espera `load` + fontes + primeiro LCP + momento ocioso (`requestIdleCallback` com timeout de 3 s; `setTimeout` de 1,2 s no Safari). O 3D passou a ser pedido em ~2,67 s, logo depois do LCP.
+
+### O que ainda pesa (dívida registrada)
+
+- **TBT de ~1,5 s e nota 61**: é o navegador avaliando o pedaço de 920 kB (three + R3F) e montando a cena *depois* do LCP; o Lighthouse multiplica por 4 cada tarefa observada. O R3F importa o three inteiro (sem tree-shaking). Caminhos possíveis: dividir a largada em mais quadros ou trocar o R3F por three puro na cena (decisão de arquitetura, fora desta fase).
+- **LCP de 3 s já na linha de base**: Google Fonts bloqueando a pintura + página montada pelo React. Correção na Fase 5 (#5).
+
+### Tarefas longas da largada (CPU 4× mais lenta, GPU real, sem Lighthouse)
+
+| | Antes | Depois |
 |---|---|---|
-| Compilar shaders do MeshPhysicalMaterial | 1,5 s travando | 10 ms (o resto, ~0,9 s, roda em paralelo via `KHR_parallel_shader_compile`) |
-| Primeiro quadro | — | 42 ms |
-| Gerar o ambiente (PMREM do RoomEnvironment) | 1,9 s | **2,2–2,5 s travando** — é compilação dos shaders internos do PMREM, não resolução (tamanho 32 custa o mesmo que 128) |
-| Cada quadro depois da largada | — | < 1 ms de desenho; 60 fps (mediana 16,7 ms) |
-
-Por que o Lighthouse amplifica: no modo simulado ele multiplica cada tarefa observada pela desaceleração de CPU (4×). A tarefa de ~2,3 s do PMREM vira ~9 s de TBT e, por começar antes do LCP observado, empurra o LCP.
-
-**Sem GPU** (WebGL por software, caso do PageSpeed Insights): cada quadro travava ~500 ms. Agora a cena não carrega nesse caso (`failIfMajorPerformanceCaveat`) e o bloqueio volta ao da página sem 3D (~0,5 s, montagem do React).
-
-Pendente: tirar o PMREM da thread principal (ver decisão em aberto na issue #4).
+| Maior tarefa | 2.640 ms | 189 ms |
+| Soma acima de 50 ms (bloqueio) | 5.469 ms | 1.446 ms |
+| Quadros depois da largada | 60 fps (mediana 16,7 ms) | 60 fps (mediana 16,7 ms) |
