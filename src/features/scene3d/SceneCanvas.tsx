@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react'
 import { ACESFilmicToneMapping } from 'three'
 import { CAMERA_FOV } from './choreography'
 import { RibbonScene } from './RibbonScene'
+import { TONE_MAPPING_EXPOSURE } from './sceneRig'
 
 interface SceneCanvasProps {
   /** O navegador derrubou o WebGL (GPU reiniciou, muitas abas): a página segue sem a cena. */
@@ -29,7 +30,7 @@ export default function SceneCanvas({ onContextLost }: SceneCanvasProps) {
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => {
         gl.toneMapping = ACESFilmicToneMapping
-        gl.toneMappingExposure = 1.1
+        gl.toneMappingExposure = TONE_MAPPING_EXPOSURE
         gl.domElement.addEventListener(
           'webglcontextlost',
           (e) => {

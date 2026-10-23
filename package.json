@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "images": "node scripts/optimize-images.mjs",
     "check:layout": "vite build --logLevel warn && node scripts/check-layout.mjs",
-    "bake:env": "node scripts/bake-envmap.mjs"
+    "bake:env": "node scripts/bake-envmap.mjs",
+    "bake:posters": "node scripts/bake-posters.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.8.2",

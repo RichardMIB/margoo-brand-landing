@@ -1,14 +1,10 @@
+import { MAX_STATIC_WIDTH, type DeviceSignals } from './sceneGate'
+
 /**
- * Vale a pena carregar a cena 3D? A página fica sem ela (e continua completa: a cena é
- * decorativa) quando:
- * - não há WebGL;
- * - o WebGL seria desenhado por software, sem GPU (`failIfMajorPerformanceCaveat`). Medido:
- *   cada quadro travava a página por ~500 ms nesse caso (é o ambiente do Lighthouse/PageSpeed);
- * - a "economia de dados" está ligada (o pedaço do 3D tem ~245 kB gzip).
+ * WebGL com GPU? Falha quando o desenho seria por software (`failIfMajorPerformanceCaveat`).
+ * Medido: nesse caso cada quadro travava a página por ~500 ms (é o ambiente do PageSpeed).
  */
-export function canRenderScene(): boolean {
-  const nav = navigator as Navigator & { connection?: { saveData?: boolean } }
-  if (nav.connection?.saveData) return false
+export function hasHardwareWebGL(): boolean {
   try {
     const canvas = document.createElement('canvas')
     const opts: WebGLContextAttributes = { failIfMajorPerformanceCaveat: true }
@@ -18,6 +14,22 @@ export function canRenderScene(): boolean {
     return true
   } catch {
     return false
+  }
+}
+
+/** Lê os sinais do aparelho para decideScene (sceneGate.ts). */
+export function readDeviceSignals(): DeviceSignals {
+  const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number }
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const width = window.innerWidth
+  return {
+    width,
+    reducedMotion,
+    saveData: nav.connection?.saveData,
+    deviceMemory: nav.deviceMemory,
+    hardwareConcurrency: nav.hardwareConcurrency || undefined,
+    // Só testa o WebGL (cria um contexto) quando os outros sinais ainda permitem o 3D
+    hardwareWebGL: width > MAX_STATIC_WIDTH && !reducedMotion ? hasHardwareWebGL() : false,
   }
 }
 

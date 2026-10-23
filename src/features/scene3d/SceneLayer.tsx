@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
-import { canRenderScene, whenPageIdle } from './webgl'
+import { decideScene } from './sceneGate'
+import { readDeviceSignals, whenPageIdle } from './webgl'
 
 const SceneCanvas = lazy(() => import('./SceneCanvas'))
 
@@ -26,7 +27,7 @@ export function SceneLayer() {
   const [state, setState] = useState<'waiting' | 'on' | 'off'>('waiting')
 
   useEffect(() => {
-    if (!canRenderScene()) return
+    if (decideScene(readDeviceSignals()).mode !== 'live') return // ADR 004: celular e aparelho fraco não baixam o 3D
     return whenPageIdle(() => setState((s) => (s === 'waiting' ? 'on' : s)))
   }, [])
 

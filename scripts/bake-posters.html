@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- Página auxiliar do scripts/bake-posters.mjs: desenha a cena real (sceneRig) parada e devolve o PNG. -->
+<meta charset="utf-8" />
+<title>bake posters</title>
+<canvas id="c"></canvas>
+<script type="module">
+  import { ACESFilmicToneMapping, DirectionalLight, Group, InstancedMesh, Mesh, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
+  import { CAMERA_FOV, PEARL_COUNT } from '/src/features/scene3d/choreography.ts'
+  import { loadEnvironment } from '/src/features/scene3d/environment.ts'
+  import { LIGHTS, TONE_MAPPING_EXPOSURE, createPoser, createSceneAssets } from '/src/features/scene3d/sceneRig.ts'
+
+  /** Mesma montagem do SceneCanvas + RibbonScene, sem React. */
+  window.renderPoster = async ({ width, height, dpr, p }) => {
+    const canvas = document.getElementById('c')
+    const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true })
+    renderer.setPixelRatio(dpr)
+    renderer.setSize(width, height, false)
+    renderer.setClearColor(0x000000, 0)
+    renderer.toneMapping = ACESFilmicToneMapping
+    renderer.toneMappingExposure = TONE_MAPPING_EXPOSURE
+
+    const scene = new Scene()
+    for (const l of LIGHTS) {
+      const light = new DirectionalLight(l.color, l.intensity)
+      light.position.set(...l.position)
+      scene.add(light)
+    }
+    const assets = createSceneAssets()
+    const group = new Group()
+    const ribbon = new Mesh(assets.ribbonGeometry, assets.ribbonMaterial)
+    ribbon.frustumCulled = false
+    group.add(ribbon)
+    scene.add(group)
+    const pearls = new InstancedMesh(assets.pearlGeometry, assets.pearlMaterial, PEARL_COUNT)
+    pearls.frustumCulled = false
+    scene.add(pearls)
+    const camera = new PerspectiveCamera(CAMERA_FOV, width / height, 0.1, 100)
+    camera.position.set(0, 0, 14)
+
+    scene.environment = await loadEnvironment(renderer, new AbortController().signal)
+    // Cena parada (t = 0, sem vento nem mouse): o mesmo quadro do modo de movimento reduzido
+    createPoser(assets, group, pearls, camera)({ p, t: 0, amp: 1, rx: 0, ry: 0, aspect: width / height })
+    renderer.render(scene, camera)
+    const url = canvas.toDataURL('image/png')
+
+    scene.environment.dispose()
+    for (const a of Object.values(assets)) a.dispose()
+    renderer.dispose()
+    return url.slice(url.indexOf(',') + 1)
+  }
+  window.posterReady = true
+</script>

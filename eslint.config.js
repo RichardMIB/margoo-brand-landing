@@ -31,7 +31,7 @@ export default defineConfig([
   },
   {
     // Funções desse script são serializadas e rodam dentro da página no Chrome
-    files: ['scripts/check-layout.mjs', 'scripts/bake-envmap.mjs'],
+    files: ['scripts/check-layout.mjs', 'scripts/bake-envmap.mjs', 'scripts/bake-posters.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 ])
