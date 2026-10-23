@@ -8,7 +8,7 @@
  * - FOTOS PROVISÓRIAS: capturas de tela da loja online (referencia/img*). Para produção,
  *   trocar pelos originais das sessões de fotos e rodar `npm run images`.
  */
-import images from './images.generated.json'
+import images from './images.generated.json' with { type: 'json' }
 
 // ---------- Tipos ----------
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pérola da marca (a mesma do letreiro) sobre o grafite da identidade -->
+  <defs>
+    <radialGradient id="p" cx="35%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="0.45" stop-color="#efe6d8" />
+      <stop offset="1" stop-color="#b9a88e" />
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#232024" />
+  <circle cx="32" cy="32" r="17" fill="url(#p)" />
+</svg>

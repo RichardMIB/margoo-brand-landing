@@ -16,7 +16,9 @@
     "images": "node scripts/optimize-images.mjs",
     "check:layout": "vite build --logLevel warn && node scripts/check-layout.mjs",
     "bake:env": "node scripts/bake-envmap.mjs",
-    "bake:posters": "node scripts/bake-posters.mjs"
+    "bake:posters": "node scripts/bake-posters.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "bake:social": "vite build --logLevel warn && node scripts/bake-social.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.8.2",

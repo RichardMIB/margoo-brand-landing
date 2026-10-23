@@ -153,13 +153,27 @@ function motionState() {
 }
 
 /** Espera a cena 3D (lazy, depois do load e de um momento ocioso). */
-async function waitScene() {
-  for (let i = 0; i < 80; i++) {
-    const c = document.querySelector('canvas')
-    if (c && c.width > 0) return true
+/**
+ * Espera a camada da cena ficar pronta e conta o que a página baixou (ADR 004):
+ * 3D ao vivo (canvas do R3F) ou os 2 pôsteres estáticos, e se o pedaço do 3D e o reflexo
+ * pré-calculado foram baixados (lista de recursos da página = o que a aba Network mostra).
+ */
+async function sceneState(expected) {
+  const read = () => {
+    const files = performance.getEntriesByType('resource').map((e) => e.name)
+    return {
+      live: !!document.querySelector('div.scene-layer.is-ready canvas'),
+      posters: document.querySelectorAll('canvas.scene-layer.is-ready').length,
+      chunk3d: files.some((f) => /\/SceneCanvas-[^/]*\.js/.test(f)),
+      envmap: files.some((f) => f.includes('/envmap/')),
+    }
+  }
+  for (let i = 0; i < 100; i++) {
+    const s = read()
+    if (expected === 'live' ? s.live : s.posters === 2) return s
     await new Promise((r) => setTimeout(r, 100))
   }
-  return false
+  return read()
 }
 
 /** Link direto: o destino precisa estar no topo da tela. */
@@ -190,7 +204,25 @@ async function record(ctx, problems) {
   failures.push(`   ↳ print: ${path.join(args.out, `falha-${shots}.jpg`)}`)
 }
 
-async function load(width, height, reduced, hash = '') {
+/** Cena esperada pela regra do ADR 004 (com 8 núcleos simulados, salvo `cores`). */
+const expectedScene = (width, reduced, cores) => (width <= 760 || reduced || cores <= 4 ? 'static' : 'live')
+
+function sceneProblems(s, expected) {
+  if (expected === 'live') {
+    if (!REQUIRE_SCENE) return []
+    return s.live ? [] : ['cena 3D não carregou (headless sem GPU? rode com --no-scene)']
+  }
+  const p = []
+  if (s.posters !== 2) p.push(`pôsteres estáticos: ${s.posters} de 2`)
+  if (s.live) p.push('3D ao vivo carregou onde devia ser estático')
+  if (s.chunk3d) p.push('baixou o pedaço do 3D (SceneCanvas-*.js) no modo estático')
+  if (s.envmap) p.push('baixou o reflexo pré-calculado no modo estático')
+  return p
+}
+
+async function load(width, height, reduced, hash = '', cores = 8) {
+  // Núcleos fixos: o resultado não depende da máquina que roda o teste (a regra corta em ≤ 4)
+  await cdp.send('Emulation.setHardwareConcurrencyOverride', { hardwareConcurrency: cores })
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 761 })
   await cdp.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }],
@@ -198,8 +230,11 @@ async function load(width, height, reduced, hash = '') {
   // Query única a cada carga: só trocar o #hash na mesma URL não recarregaria a página
   await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}${hash}` })
   await sleep(1200)
-  const scene = await cdp.evaluate(waitScene)
-  if (REQUIRE_SCENE && !scene) failures.push(`${width}x${height}${reduced ? ' (movimento reduzido)' : ''}: cena 3D não carregou (headless sem GPU? rode com --no-scene)`)
+  const expected = expectedScene(width, reduced, cores)
+  const scene = await cdp.evaluate(sceneState, expected)
+  const ctx = `${width}x${height}${reduced ? ' (movimento reduzido)' : ''}${cores !== 8 ? ` (${cores} núcleos)` : ''}`
+  for (const p of sceneProblems(scene, expected)) failures.push(`${ctx}: ${p}`)
+  sceneChecks.push(`${ctx}: ${expected === 'live' ? '3D ao vivo' : 'pôsteres'}, pedaço do 3D ${scene.chunk3d ? 'baixado' : 'não baixado'}`)
   if (hash) return
   // Carrega todas as fotos lazy: o print sai completo e nenhuma medida depende de imagem chegando
   await cdp.evaluate(() => Promise.all([...document.images].map((i) => ((i.loading = 'eager'), i.decode().catch(() => {})))))
@@ -218,6 +253,7 @@ const mouseStates = (w, h) =>
 await cdp.send('Page.enable')
 let checked = 0
 let loads = 0
+const sceneChecks = []
 for (const [w, h] of VIEWPORTS) {
   const vp = `${w}x${h}`
   // ----- Com movimento -----
@@ -259,6 +295,12 @@ for (const [w, h] of VIEWPORTS) {
   }
   console.log(`✓ ${vp} conferido`)
 }
+
+// ----- Desktop fraco (4 núcleos): pôsteres, sem baixar o 3D -----
+await load(1440, 900, false, '', 4)
+checked++
+
+console.log(`\nCena por modo (ADR 004):\n  ${[...new Set(sceneChecks)].join('\n  ')}`)
 
 cdp.close()
 await preview?.close()

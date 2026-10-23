@@ -16,8 +16,9 @@ import { SceneLayer } from './features/scene3d/SceneLayer'
 export default function App() {
   useScrollEngine()
   return (
-    <>
-      {/* Cena 3D fixa atrás (z-index 0), carregada depois do conteúdo */}
+    // relative: os pôsteres estáticos se ancoram no topo e no fim do documento
+    <div className="relative">
+      {/* Cena atrás do conteúdo (z-index 0): 3D ao vivo no desktop, pôsteres no celular (ADR 004) */}
       <SceneLayer />
       <div className="relative z-[1]">
         <a
@@ -40,6 +41,6 @@ export default function App() {
         </main>
         <Footer />
       </div>
-    </>
+    </div>
   )
 }

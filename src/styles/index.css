@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* Bodoni Moda e Jost hospedadas no próprio site (gerado por npm run fonts) */
+@import './fonts.css';
 /* CSS de componentes com pseudo-elementos e estados que não cabem bem em utilitários */
 @import '../features/glass/glass.css';
 @import '../features/media/float.css';
