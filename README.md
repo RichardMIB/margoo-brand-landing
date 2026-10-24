@@ -95,6 +95,7 @@ A partir daí, cada push na `main` publica sozinho, e cada pull request ganha um
 ## Dívida técnica
 
 - **v2: trocar R3F por three puro na cena para reduzir o pacote do 3D.** Hoje ele tem ~245 kB gzip, porque o R3F importa o three inteiro. Afeta só o desktop forte.
+- **v2: encurtar o fade do pôster (Speed Index).** No celular, o pôster da fita entra depois do LCP e, com a CPU lenta, a última mudança visual vai a ~3,4 s, o que derruba o Speed Index (Lighthouse Mobile 86–93). Ficou assim por escolha visual ([performance.md](docs/performance.md)).
 - A página é montada pelo React no navegador. Pré-renderizar o HTML no build adiantaria o LCP do celular.
 
 ## Pendências de conteúdo
