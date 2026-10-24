@@ -44,7 +44,18 @@ Prints em `img/posteres.jpg`.
 ## Consequências
 
 - **Revisão (24/10/2026, decisão do Richard):** a primeira versão também cortava computadores por núcleos e memória, e um notebook comum de 4 núcleos (inclusive a máquina de desenvolvimento) ficava sem o 3D, que é a identidade do site. Agora núcleos e memória só contam no toque.
-- **Custo aceito:** em computador fraco, o vidro sobre a fita pode cair abaixo de 50 fps (medido: 47 fps com CPU 4× mais lenta). O LCP não muda, porque a cena só começa depois dele. Mitigação possível, ainda não feita: medir o fps nos primeiros segundos e trocar para os pôsteres se ficar abaixo de ~40.
+- **Custo aceito:** em computador fraco, o vidro sobre a fita pode cair abaixo de 50 fps (medido: 47 fps com CPU 4× mais lenta). O LCP não muda, porque a cena só começa depois dele. Abaixo de 40 fps entra a proteção de FPS (próxima seção).
+
+## Proteção de FPS (24/10/2026)
+
+A regra acima decide **antes** de baixar o 3D, por sinais do aparelho. Nenhum sinal diz quanto a cena vai rodar de verdade, então a cena ao vivo também é **medida depois de aparecer**:
+
+- `createFpsGuard()` em `src/features/scene3d/fpsGuard.ts` (função pura com testes; o relógio vem de fora) recebe cada quadro desenhado.
+- Mede só **depois que a cena aparece** (shaders compilados, fade iniciado). Ignora o **primeiro segundo** (aquecimento) e mede os **3 s seguintes de aba visível**. Aba oculta ou quadro parado (movimento reduzido) pausam a conta, e o intervalo parado não entra na média.
+- Usa o relógio próprio (`performance.now()`), não o `dt` do motor, que é limitado a 0,05 s e esconderia quedas abaixo de 20 fps.
+- **Média abaixo de 40 fps:** a cena some com fade (0,5 s) enquanto os pôsteres entram; depois de 0,9 s é desmontada (o R3F libera geometrias, materiais e contexto WebGL, e o cliente sai do `scrollEngine`). No console: `Cena 3D trocada pelos pôsteres: N fps de média`.
+- **Decide uma vez por visita.** Depois do veredito ("fica" ou "sai") a medição para; não fica alternando. "Sai" é guardado na `sessionStorage` (`margoo:cena-lenta`): recarregar a página na mesma aba vai direto para os pôsteres, sem baixar o 3D de novo. Aba nova = visita nova.
+- Verificação: `npm run check:layout` aplica CPU 20× mais lenta logo que a cena monta e confere a troca, a desmontagem, a marca na `sessionStorage` e que a recarga não baixa o 3D.
 - Notebook com tela de toque: conta como computador, porque o ponteiro principal é o touchpad.
 - A decisão é tomada uma vez, ao abrir a página. Redimensionar a janela depois não troca de modo.
 - Mudou a cena? Rode `npm run bake:posters` para os pôsteres acompanharem.

@@ -166,6 +166,7 @@ async function sceneState(expected) {
       posters: document.querySelectorAll('canvas.scene-layer.is-ready').length,
       chunk3d: files.some((f) => /\/SceneCanvas-[^/]*\.js/.test(f)),
       envmap: files.some((f) => f.includes('/envmap/')),
+      slowFlag: sessionStorage.getItem('margoo:cena-lenta'),
     }
   }
   for (let i = 0; i < 100; i++) {
@@ -211,7 +212,9 @@ const expectedScene = (width, reduced, cores, touch) =>
 function sceneProblems(s, expected) {
   if (expected === 'live') {
     if (!REQUIRE_SCENE) return []
-    return s.live ? [] : ['cena 3D não carregou (headless sem GPU? rode com --no-scene)']
+    if (s.live) return []
+    if (s.slowFlag) return ['cena 3D reprovada pela proteção de FPS nesta visita (sessionStorage)']
+    return ['cena 3D não carregou (headless sem GPU? rode com --no-scene)']
   }
   const p = []
   if (s.posters !== 2) p.push(`pôsteres estáticos: ${s.posters} de 2`)
@@ -229,6 +232,14 @@ async function load(width, height, reduced, hash = '', cores = 8, touch = false)
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 761 })
   await cdp.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }],
+  })
+  // Cada carga começa como visita nova: a proteção de FPS guarda "cena lenta" na sessionStorage
+  await cdp.evaluate(() => {
+    try {
+      sessionStorage.clear()
+    } catch {
+      /* about:blank na primeira carga */
+    }
   })
   // Query única a cada carga: só trocar o #hash na mesma URL não recarregaria a página
   await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}${hash}` })
@@ -309,6 +320,40 @@ checked++
 await load(1024, 768, false, '', 8, true)
 checked++
 await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false })
+
+// ----- Proteção de FPS: CPU 20× mais lenta logo que a cena monta → pôsteres, cena desmontada -----
+if (REQUIRE_SCENE) {
+  await cdp.send('Emulation.setHardwareConcurrencyOverride', { hardwareConcurrency: 8 })
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
+  await cdp.evaluate(() => sessionStorage.clear()) // visita nova (a página atual é do site)
+  await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}` })
+  for (let i = 0; i < 200 && !(await cdp.evaluate(() => !!document.querySelector('div.scene-layer canvas'))); i++)
+    await sleep(50)
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 })
+  const swapped = await cdp.evaluate(async () => {
+    for (let i = 0; i < 300; i++) {
+      const posters = document.querySelectorAll('canvas.scene-layer.is-ready').length
+      const sceneGone = !document.querySelector('div.scene-layer canvas')
+      if (posters === 2 && sceneGone) return { ok: true, flag: sessionStorage.getItem('margoo:cena-lenta') }
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    return { ok: false, live: !!document.querySelector('div.scene-layer.is-ready canvas') }
+  })
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
+  if (!swapped.ok) failures.push(`proteção de FPS (CPU 20×): a cena não trocou pelos pôsteres (${JSON.stringify(swapped)})`)
+  else if (swapped.flag !== '1') failures.push('proteção de FPS: trocou, mas não guardou a decisão na sessionStorage')
+  // Mesma visita: recarregar não baixa o 3D de novo
+  await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}` })
+  await sleep(1200)
+  const again = await cdp.evaluate(sceneState, 'static')
+  if (again.chunk3d || again.live || again.posters !== 2)
+    failures.push(`proteção de FPS: ao recarregar na mesma visita devia ficar nos pôsteres (${JSON.stringify(again)})`)
+  sceneChecks.push(
+    `1440x900 (CPU 20×): ${swapped.ok ? 'cena trocada pelos pôsteres' : 'NÃO trocou'}; recarga na mesma visita ${again.chunk3d ? 'baixou' : 'não baixou'} o 3D`,
+  )
+  checked += 2
+}
 
 console.log(`\nCena por modo (ADR 004):\n  ${[...new Set(sceneChecks)].join('\n  ')}`)
 

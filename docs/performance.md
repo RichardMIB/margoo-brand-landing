@@ -111,4 +111,17 @@ Com a revisão, computador com mouse carrega o 3D mesmo com 4 núcleos. Lighthou
 
 Acessibilidade, boas práticas e SEO: 100. O LCP é o mesmo da versão estática (a cena começa depois dele); o que sobe é o **TBT** (20 → 142 ms), pelo parse do pacote do 3D e pela compilação dos shaders. A meta (≥ 95) está cumprida, mas com folga curta: a v2 (three puro) é o que daria margem.
 
+### Proteção de FPS: A/B na mesma carga (24/10/2026)
+
+A remedição depois da proteção pegou a máquina carregada por outro programa (CPU em 84%, `benchmarkIndex` 290–450 contra ~900 nas medições acima), então os números absolutos **não valem** como referência. Para isolar o efeito do código, o build anterior (`edf4dd3`) e o novo rodaram alternados, nas mesmas condições:
+
+| Lighthouse Desktop (3 rodadas) | Performance | LCP | TBT | Speed Index | Pôsteres baixados |
+|---|---|---|---|---|---|
+| Antes da proteção | 68 / 68 / 67 | 0,82 / 0,76 / 0,69 s | 1.175 / 1.230 / 2.289 ms | 1,78 / 1,73 / 1,78 s | não |
+| Com a proteção | 64 / 66 / 67 | 0,77 / 0,75 / 0,71 s | 1.127 / 1.073 / 1.000 ms | 2,60 / 2,25 / 2,13 s | **sim, aos ~10 s** |
+
+- O carregamento não piorou: LCP e TBT iguais (a proteção só começa depois que a cena aparece).
+- Com a máquina lenta, a fita ficou abaixo de 40 fps e **a proteção trocou a cena pelos pôsteres** nas 3 rodadas. É o comportamento esperado; a troca é uma mudança visual tardia e por isso o Speed Index sobe um pouco.
+- Falta remedir o valor absoluto com a máquina livre (meta ≥ 95; antes da proteção, 96).
+
 Dívida que continua: **v2, trocar R3F por three puro na cena para reduzir o pacote do 3D** (hoje ~245 kB gzip; afeta só o desktop forte).
