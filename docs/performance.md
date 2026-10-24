@@ -61,3 +61,27 @@ Critério da fase: LCP no máximo 10% acima da linha de base (3,32 s). **Cumprid
 | Maior tarefa | 2.640 ms | 189 ms |
 | Soma acima de 50 ms (bloqueio) | 5.469 ms | 1.446 ms |
 | Quadros depois da largada | 60 fps (mediana 16,7 ms) | 60 fps (mediana 16,7 ms) |
+
+## Fase 5 — versão estática no celular + fontes no próprio site (23/10/2026)
+
+Mesmo método, agora em **Mobile e Desktop** (`--preset=desktop`), 3 rodadas cada, mediana.
+
+| | Performance | LCP | FCP | CLS | TBT | Speed Index | Acessib. | Boas práticas | SEO |
+|---|---|---|---|---|---|---|---|---|---|
+| Linha de base Mobile (Fase 3) | 86 | 3,02 s | 2,80 s | 0 | 0 ms | 5,10 s | — | — | — |
+| 3D Mobile (Fase 4) | 61 | 3,00 s | 2,71 s | 0 | 1.478 ms | 5,08 s | — | — | — |
+| **Fase 5 Mobile** | **96** | **2,58 s (−15%)** | **1,47 s** | 0 | 124 ms | 1,69 s | 100 | 100 | 100 |
+| **Fase 5 Desktop** | **100** | **0,64 s** | 0,41 s | 0 | 0 ms | 0,64 s | 100 | 100 | 100 |
+
+O que mudou:
+
+- **Celular sem o pedaço do 3D (ADR 004):** recebe dois pôsteres da cena (12–24 kB cada, desenhados em canvas depois do conteúdo). Confirmado pela lista de arquivos baixados: nem `SceneCanvas-*.js` nem `envmap/` aparecem. O TBT caiu de ~1,5 s para ~0,1 s.
+- **Fontes no próprio site:** sem o CSS do Google Fonts bloqueando a pintura (~1 s na linha de base), e com preload da fonte do H1. O FCP caiu de 2,80 s para 1,47 s.
+- **SEO 100:** título, descrição, canonical, Open Graph, JSON-LD e `robots.txt` gerados no build.
+
+**Atenção ao ler o Desktop:** esta máquina tem 4 núcleos lógicos, então pela regra do ADR 004 o Lighthouse Desktop mediu a **versão estática**. Num desktop com 5 núcleos ou mais, a página carrega o 3D ao vivo depois do LCP. O custo dele foi medido à parte:
+
+- com a CPU normal, a fita a **57,9 fps de média** (mediana 60) com o mouse passeando sobre os botões de vidro;
+- o LCP não muda, porque a cena só começa depois dele (Fase 4).
+
+Dívida que continua: **v2, trocar R3F por three puro na cena para reduzir o pacote do 3D** (hoje ~245 kB gzip; afeta só o desktop forte).

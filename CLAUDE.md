@@ -40,11 +40,11 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 | ink | `#232024` | texto principal, botão escuro |
 | ink-soft | `#463F39` | texto secundário |
 | pearl | `#F6F0E7` | texto sobre escuro, destaques claros |
-| accent | `#6B522E` | números dos passos, detalhes |
+| accent | `#6B522E` | números dos passos, detalhes (**só texto grande**, ≥ 24px: contraste 3,9:1 no fundo, abaixo dos 4,5:1 exigidos para texto normal) |
 | line | `rgba(35,32,36,.2)` | linhas divisórias |
 | fita (3D) | `#A9824F` + sheen `#FFF1DA` | cetim caramelo |
 
-- Fontes (hoje via Google Fonts; na Fase 5 passam a ser hospedadas no próprio site, issue #5): **Bodoni Moda** (títulos, 400) e **Jost** (texto, 300/400/500). Fallbacks: Didot/Georgia e Futura/system-ui.
+- Fontes **hospedadas no próprio site** (`npm run fonts` → `public/fonts/` + `src/styles/fonts.css`; sem Google Fonts): **Bodoni Moda** (títulos, 400, eixo óptico variável) e **Jost** (texto, 300–500), woff2 latin + latin-ext, `font-display: swap`, preload só da Bodoni latin (fonte do H1). Usar outro peso ou itálico? Acrescente em `scripts/fetch-fonts.mjs` e rode de novo. Fallbacks: Didot/Georgia e Futura/system-ui.
 - Logo em texto: `MARGOOBRAND`, Jost 500, `letter-spacing: .32em`.
 - Fotos **flutuam** sobre o fundo: sombra suave longa, raio 3px, sem cards iguais em grade.
 - Evitar: rótulos em CAIXA ALTA acima de títulos, "01/02/03" sem sequência real, emoji, seta "→" em botões.
@@ -73,7 +73,8 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 - **Pérolas**: 25 esferas iridescentes. Começam espalhadas (6 visíveis no topo, as outras aparecem entre p 0.15 e 0.45) e entre p 0.8 e 0.97 interpolam para um colar em U que pende dos cantos de cima da tela e passa por baixo do título final. Posições do colar recalculadas no resize a partir da largura visível.
 - Mouse (só ponteiro fino): leve rotação amortecida da cena.
 - **Performance obrigatória**: canvas carregado com `React.lazy` depois do conteúdo (não pode atrasar o LCP: a cena espera `load` + fontes + primeiro LCP + momento ocioso; medições em `docs/performance.md`), shaders com `compileAsync`, sem cena em WebGL por software (`failIfMajorPerformanceCaveat`), `dpr` máx. 1.75, pausar quando a aba está oculta, liberar recursos no unmount, tratar `webglcontextlost`. Sem WebGL → página funciona sem a cena.
-- **Movimento reduzido** (`prefers-reduced-motion`): cena desenhada parada, sem loop contínuo.
+- **3D ao vivo só no desktop forte (ADR 004):** `decideScene()` em `src/features/scene3d/sceneGate.ts` (função pura com testes) manda para a versão estática quem tiver largura ≤ 760px, `saveData`, `deviceMemory` ≤ 4, `hardwareConcurrency` ≤ 4, movimento reduzido ou WebGL sem GPU. Nesses casos o pedaço do 3D **não é baixado**; entram os pôsteres da própria cena (`npm run bake:posters` → `public/posters/`), desenhados em `<canvas>` (não `<img>`, para não virar LCP), com fade depois do conteúdo. No celular a fita começa abaixo do H1 (H1 sempre legível em 360/390). Mudou a cena? Rode `npm run bake:posters`.
+- **Movimento reduzido** (`prefers-reduced-motion`): pôsteres estáticos, sem 3D e sem animação de scroll.
 
 ## Efeitos de scroll no DOM (um motor rAF só)
 
@@ -110,13 +111,16 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 
 - `<title>` "Margoo Brand | Moda feminina na Beira-Mar, Fortaleza", meta description, Open Graph + Twitter card com imagem 1200×630, `lang="pt-BR"`.
 - JSON-LD `ClothingStore` com endereço, horários, Instagram e site.
+- Tudo isso é **gerado de `src/seo/seo.ts` (dados do `content.ts`) no build** pelo plugin do `vite.config.ts`, que também emite `robots.txt` e, com domínio, `sitemap.xml`. Domínio: variável `SITE_URL` ou `VERCEL_PROJECT_PRODUCTION_URL` (a Vercel informa sozinha). Sem domínio, as tags com URL absoluta ficam de fora.
+- Imagem 1200×630 e ícones: `npm run bake:social` (print real do topo; regerar quando o topo mudar). Sem telefone e CEP no JSON-LD até serem confirmados (não inventar).
 
 ## Qualidade
 
 - TypeScript strict, ESLint sem erros, `npm run build` passando.
 - Mudou layout ou movimento: `npm run check:layout` passando (Chrome headless com GPU, 5 larguras + 1366×650, várias posições de scroll, mouse nos cantos, movimento reduzido, links diretos com `#` e cena 3D ligada; sem dependência nova, usa o Chrome instalado ou `CHROME_PATH`; em máquina sem GPU use `--no-scene`).
 - Mudou a cena 3D ou o carregamento: medir o Lighthouse Mobile (mediana de 3, comando em `docs/performance.md`); LCP no máximo 10% acima da linha de base.
-- Acessibilidade: foco visível, links reais (`<a href>`), contraste AA, navegação por teclado, `aria-hidden` no canvas.
+- Acessibilidade: foco visível, links reais (`<a href>`), contraste AA (verificado por `src/lib/contrast.test.ts`, que lê as cores do CSS), navegação por teclado, `aria-hidden` no canvas e nos pôsteres.
+- Lighthouse de referência (Fase 5): Mobile 96 e Desktop 100 em performance; 100 em acessibilidade, boas práticas e SEO. Medições em `docs/performance.md`.
 - Responsivo testado em 360, 768 e 1280+.
 - Nunca commitar `.env` (não há segredos neste projeto).
 
@@ -125,3 +129,8 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 - Tarefas viram **GitHub Issues** no repo; corpo com `Prazo: DD/MM`. Commits com `Closes #N`.
 - Decisões de arquitetura em `docs/adr/NNN-titulo.md`.
 - README do repo é vitrine de portfólio: GIF/print do site, link do deploy, stack, desafios técnicos (fita 3D, colar no scroll, vidro), créditos ("Fotos: Margoo Brand, uso autorizado").
+
+## Dívida técnica
+
+- **v2: trocar R3F por three puro na cena para reduzir o pacote do 3D** (~245 kB gzip; o R3F importa o three inteiro).
+- Pré-renderizar o HTML no build (hoje o React monta a página no navegador).

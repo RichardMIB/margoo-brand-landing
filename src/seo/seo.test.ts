@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { business } from '../data/content'
-import { buildHeadTags, buildJsonLd, jsonForScript, resolveSiteUrl, seo } from './seo'
+import { buildHeadTags, buildJsonLd, buildRobots, buildSitemap, jsonForScript, resolveSiteUrl, seo } from './seo'
 
 describe('resolveSiteUrl', () => {
   it('usa SITE_URL e normaliza para a origem', () => {
@@ -62,5 +62,15 @@ describe('buildHeadTags', () => {
 
   it('JSON-LD não pode fechar a tag <script>', () => {
     expect(jsonForScript({ a: '</script><script>alert(1)</script>' })).not.toContain('</script>')
+  })
+})
+
+describe('robots e sitemap', () => {
+  it('robots libera tudo e só aponta sitemap com domínio', () => {
+    expect(buildRobots(null)).toBe('User-agent: *\nAllow: /\n')
+    expect(buildRobots('https://exemplo.com')).toContain('Sitemap: https://exemplo.com/sitemap.xml')
+  })
+  it('sitemap com a URL absoluta da página', () => {
+    expect(buildSitemap('https://exemplo.com')).toContain('<loc>https://exemplo.com/</loc>')
   })
 })

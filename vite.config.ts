@@ -2,15 +2,23 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
-import { buildHeadTags, resolveSiteUrl } from './src/seo/seo.ts'
+import { buildHeadTags, buildRobots, buildSitemap, resolveSiteUrl } from './src/seo/seo.ts'
 
-/** Injeta as tags de SEO no index.html (domínio vem de SITE_URL ou da Vercel no build). */
+/**
+ * SEO no build: tags no index.html, robots.txt e (com domínio) sitemap.xml.
+ * Domínio: SITE_URL ou o domínio de produção que a Vercel informa no build.
+ */
 function seoTags(): Plugin {
+  const siteUrl = resolveSiteUrl(process.env)
   return {
     name: 'margoo-seo',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: buildRobots(siteUrl) })
+      if (siteUrl) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: buildSitemap(siteUrl) })
+    },
     transformIndexHtml(html) {
       if (!html.includes('<!--seo-->')) throw new Error('index.html sem o marcador <!--seo-->')
-      return html.replace('<!--seo-->', buildHeadTags(resolveSiteUrl(process.env)))
+      return html.replace('<!--seo-->', buildHeadTags(siteUrl))
     },
   }
 }

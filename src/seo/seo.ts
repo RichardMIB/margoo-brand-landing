@@ -89,3 +89,17 @@ export function buildHeadTags(siteUrl: string | null): string {
   tags.push(`<script type="application/ld+json">${jsonForScript(buildJsonLd(siteUrl))}</script>`)
   return tags.join('\n    ')
 }
+
+/** robots.txt: tudo liberado; aponta o sitemap quando o domínio é conhecido. */
+export function buildRobots(siteUrl: string | null): string {
+  return ['User-agent: *', 'Allow: /', ...(siteUrl ? ['', `Sitemap: ${siteUrl}/sitemap.xml`] : [])].join('\n') + '\n'
+}
+
+/** sitemap.xml de uma página só (precisa de URL absoluta, então só existe com domínio). */
+export function buildSitemap(siteUrl: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${siteUrl}/</loc></url>
+</urlset>
+`
+}
