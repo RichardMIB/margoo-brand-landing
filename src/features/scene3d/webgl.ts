@@ -24,6 +24,7 @@ export function readDeviceSignals(): DeviceSignals {
   const width = window.innerWidth
   return {
     width,
+    finePointer: matchMedia('(pointer: fine)').matches,
     reducedMotion,
     saveData: nav.connection?.saveData,
     deviceMemory: nav.deviceMemory,

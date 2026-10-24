@@ -13,6 +13,8 @@ export const MAX_STATIC_CORES = 4
 export interface DeviceSignals {
   /** Largura da janela em px. */
   width: number
+  /** Ponteiro principal preciso (mouse/touchpad), `(pointer: fine)`. Falso em celular e tablet. */
+  finePointer: boolean
   reducedMotion: boolean
   /** navigator.connection.saveData; indefinido onde a API não existe (Safari, Firefox). */
   saveData?: boolean
@@ -35,17 +37,22 @@ export type StaticReason =
 export type SceneDecision = { mode: 'live' } | { mode: 'static'; reason: StaticReason }
 
 /**
- * Regra de produto (ADR 004): o 3D ao vivo só carrega em tela larga, com aparelho forte, sem
- * economia de dados, sem movimento reduzido e com GPU. Sinal ausente (API não existe naquele
- * navegador) não conta contra o aparelho.
+ * Regra de produto (ADR 004):
+ * - celular (≤ 760px): sempre estático;
+ * - tablet (tela larga com toque): 3D só com aparelho forte (memória e núcleos acima do limite);
+ * - computador (tela larga com mouse/touchpad): 3D ao vivo, sem olhar núcleos nem memória.
+ * Em todos: economia de dados, movimento reduzido ou WebGL sem GPU → estático.
+ * Sinal ausente (API não existe naquele navegador) não conta contra o aparelho.
  */
 export function decideScene(s: DeviceSignals): SceneDecision {
   if (s.width <= MAX_STATIC_WIDTH) return { mode: 'static', reason: 'tela-estreita' }
   if (s.saveData === true) return { mode: 'static', reason: 'economia-de-dados' }
-  if (s.deviceMemory !== undefined && s.deviceMemory <= MAX_STATIC_MEMORY_GB)
-    return { mode: 'static', reason: 'pouca-memoria' }
-  if (s.hardwareConcurrency !== undefined && s.hardwareConcurrency <= MAX_STATIC_CORES)
-    return { mode: 'static', reason: 'poucos-nucleos' }
+  if (!s.finePointer) {
+    if (s.deviceMemory !== undefined && s.deviceMemory <= MAX_STATIC_MEMORY_GB)
+      return { mode: 'static', reason: 'pouca-memoria' }
+    if (s.hardwareConcurrency !== undefined && s.hardwareConcurrency <= MAX_STATIC_CORES)
+      return { mode: 'static', reason: 'poucos-nucleos' }
+  }
   if (s.reducedMotion) return { mode: 'static', reason: 'movimento-reduzido' }
   if (!s.hardwareWebGL) return { mode: 'static', reason: 'sem-webgl' }
   return { mode: 'live' }

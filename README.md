@@ -12,7 +12,7 @@ Landing page da **Margoo Brand**, boutique feminina na Galeria Via Scala, Beira-
 | | Performance | Acessibilidade | Boas práticas | SEO |
 |---|---|---|---|---|
 | **Celular** | **92** | 100 | 100 | 100 |
-| **Desktop** | **99** | 100 | 100 | 100 |
+| **Desktop** (3D ao vivo) | **96** | 100 | 100 | 100 |
 
 Lighthouse 12, mediana de 3 rodadas, build de produção.
 
@@ -69,7 +69,7 @@ npm run bake:posters   # pôsteres estáticos da cena (regerar ao mudar a cena)
 npm run bake:social    # imagem de compartilhamento 1200x630 e ícones
 ```
 
-**Ver o 3D ao vivo num computador com 4 núcleos:** pela regra do ADR 004 ele recebe a versão estática. No Chrome, abra o DevTools (F12), vá na aba **Performance**, clique na engrenagem ⚙️, mude **Hardware concurrency** para 8 e recarregue com o DevTools aberto.
+**Ver a versão estática (pôsteres) no computador:** no Chrome, abra o DevTools (F12) → menu ⋮ → *More tools* → **Rendering** → *Emulate CSS media feature prefers-reduced-motion* = `reduce` e recarregue. Pela regra do ADR 004, computador com mouse carrega o 3D ao vivo; celular e tablet fraco recebem os pôsteres.
 
 ## Deploy na Vercel (plano grátis)
 

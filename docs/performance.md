@@ -100,4 +100,15 @@ Acessibilidade, boas práticas e SEO: **100 em todas as 9 rodadas**. Nenhuma rod
 
 **Por que o Mobile caiu de 96 para 92:** o Speed Index ficou em dois grupos (~2 s e ~5 s). Nas rodadas lentas, a última mudança visual acontece em ~3,4 s: é o **fade do pôster da fita**, que por projeto entra depois do LCP e de um momento ocioso. Com a CPU mais lenta, esse momento chega mais tarde e o Speed Index cobra. Não é regressão de código; o LCP continua 12% melhor que a linha de base. Se um dia a nota pesar mais que o efeito, a saída é encurtar o fade ou começar o pôster já visível no lugar.
 
+### Desktop com o 3D ao vivo (24/10/2026, regra revista do ADR 004)
+
+Com a revisão, computador com mouse carrega o 3D mesmo com 4 núcleos. Lighthouse Desktop com os mesmos flags de GPU do `check:layout` (`--enable-gpu --ignore-gpu-blocklist --use-angle=d3d11`); as 3 rodadas baixaram `SceneCanvas-*.js` e `envmap/`, ou seja, **mediram a cena ao vivo**, não os pôsteres.
+
+| Rodada | Performance | LCP | FCP | CLS | TBT | Speed Index |
+|---|---|---|---|---|---|---|
+| 1 / 2 / 3 | 98 / 96 / 93 | 0,68 / 0,68 / 0,68 s | 0,45 / 0,45 / 0,46 s | 0 | 111 / 142 / 193 ms | 1,05 / 1,13 / 1,20 s |
+| **Mediana** | **96** | **0,68 s** | **0,45 s** | **0** | **142 ms** | **1,13 s** |
+
+Acessibilidade, boas práticas e SEO: 100. O LCP é o mesmo da versão estática (a cena começa depois dele); o que sobe é o **TBT** (20 → 142 ms), pelo parse do pacote do 3D e pela compilação dos shaders. A meta (≥ 95) está cumprida, mas com folga curta: a v2 (three puro) é o que daria margem.
+
 Dívida que continua: **v2, trocar R3F por three puro na cena para reduzir o pacote do 3D** (hoje ~245 kB gzip; afeta só o desktop forte).

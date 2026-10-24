@@ -204,8 +204,9 @@ async function record(ctx, problems) {
   failures.push(`   ↳ print: ${path.join(args.out, `falha-${shots}.jpg`)}`)
 }
 
-/** Cena esperada pela regra do ADR 004 (com 8 núcleos simulados, salvo `cores`). */
-const expectedScene = (width, reduced, cores) => (width <= 760 || reduced || cores <= 4 ? 'static' : 'live')
+/** Cena esperada pela regra do ADR 004 (8 núcleos e mouse simulados, salvo `cores`/`touch`). */
+const expectedScene = (width, reduced, cores, touch) =>
+  width <= 760 || reduced || (touch && cores <= 4) ? 'static' : 'live'
 
 function sceneProblems(s, expected) {
   if (expected === 'live') {
@@ -220,9 +221,11 @@ function sceneProblems(s, expected) {
   return p
 }
 
-async function load(width, height, reduced, hash = '', cores = 8) {
+async function load(width, height, reduced, hash = '', cores = 8, touch = false) {
   // Núcleos fixos: o resultado não depende da máquina que roda o teste (a regra corta em ≤ 4)
   await cdp.send('Emulation.setHardwareConcurrencyOverride', { hardwareConcurrency: cores })
+  // Toque emulado deixa o ponteiro principal "coarse" (tablet)
+  await cdp.send('Emulation.setTouchEmulationEnabled', touch ? { enabled: true, maxTouchPoints: 5 } : { enabled: false })
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 761 })
   await cdp.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: reduced ? 'reduce' : 'no-preference' }],
@@ -230,9 +233,9 @@ async function load(width, height, reduced, hash = '', cores = 8) {
   // Query única a cada carga: só trocar o #hash na mesma URL não recarregaria a página
   await cdp.send('Page.navigate', { url: `${url}?carga=${++loads}${hash}` })
   await sleep(1200)
-  const expected = expectedScene(width, reduced, cores)
+  const expected = expectedScene(width, reduced, cores, touch)
   const scene = await cdp.evaluate(sceneState, expected)
-  const ctx = `${width}x${height}${reduced ? ' (movimento reduzido)' : ''}${cores !== 8 ? ` (${cores} núcleos)` : ''}`
+  const ctx = `${width}x${height}${reduced ? ' (movimento reduzido)' : ''}${cores !== 8 ? ` (${cores} núcleos)` : ''}${touch ? ' (toque)' : ''}`
   for (const p of sceneProblems(scene, expected)) failures.push(`${ctx}: ${p}`)
   sceneChecks.push(`${ctx}: ${expected === 'live' ? '3D ao vivo' : 'pôsteres'}, pedaço do 3D ${scene.chunk3d ? 'baixado' : 'não baixado'}`)
   if (hash) return
@@ -296,9 +299,16 @@ for (const [w, h] of VIEWPORTS) {
   console.log(`✓ ${vp} conferido`)
 }
 
-// ----- Desktop fraco (4 núcleos): pôsteres, sem baixar o 3D -----
+// ----- Notebook de 4 núcleos com mouse: 3D ao vivo (núcleos só contam no toque) -----
 await load(1440, 900, false, '', 4)
 checked++
+// ----- Tablet fraco (toque, 4 núcleos): pôsteres, sem baixar o 3D -----
+await load(1024, 768, false, '', 4, true)
+checked++
+// ----- Tablet forte (toque, 8 núcleos): 3D ao vivo -----
+await load(1024, 768, false, '', 8, true)
+checked++
+await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false })
 
 console.log(`\nCena por modo (ADR 004):\n  ${[...new Set(sceneChecks)].join('\n  ')}`)
 
