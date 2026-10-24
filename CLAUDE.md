@@ -120,7 +120,7 @@ Tokens no CSS com `@theme` do **Tailwind v4** (`src/styles/index.css`, plugin `@
 - Mudou layout ou movimento: `npm run check:layout` passando (Chrome headless com GPU, 5 larguras + 1366×650, várias posições de scroll, mouse nos cantos, movimento reduzido, links diretos com `#` e cena 3D ligada; sem dependência nova, usa o Chrome instalado ou `CHROME_PATH`; em máquina sem GPU use `--no-scene`).
 - Mudou a cena 3D ou o carregamento: medir o Lighthouse Mobile (mediana de 3, comando em `docs/performance.md`); LCP no máximo 10% acima da linha de base.
 - Acessibilidade: foco visível, links reais (`<a href>`), contraste AA (verificado por `src/lib/contrast.test.ts`, que lê as cores do CSS), navegação por teclado, `aria-hidden` no canvas e nos pôsteres.
-- Lighthouse de referência (Fase 5): Mobile 96 e Desktop 100 em performance; 100 em acessibilidade, boas práticas e SEO. Medições em `docs/performance.md`.
+- Lighthouse de referência (Fase 5): Mobile 92 e Desktop 99 em performance (mediana de 3; o Mobile oscila 86–93 conforme a carga da máquina); 100 em acessibilidade, boas práticas e SEO. Medições em `docs/performance.md`.
 - Responsivo testado em 360, 768 e 1280+.
 - Nunca commitar `.env` (não há segredos neste projeto).
 

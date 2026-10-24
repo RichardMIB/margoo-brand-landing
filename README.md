@@ -11,8 +11,10 @@ Landing page da **Margoo Brand**, boutique feminina na Galeria Via Scala, Beira-
 
 | | Performance | Acessibilidade | Boas práticas | SEO |
 |---|---|---|---|---|
-| **Celular** | **96** | 100 | 100 | 100 |
-| **Desktop** | **100** | 100 | 100 | 100 |
+| **Celular** | **92** | 100 | 100 | 100 |
+| **Desktop** | **99** | 100 | 100 | 100 |
+
+Lighthouse 12, mediana de 3 rodadas, build de produção.
 
 No celular, a página mostra uma imagem estática da própria cena 3D em vez de baixar o 3D ao vivo (~245 kB): é o que mantém a página leve e rápida no 4G sem perder a identidade visual ([ADR 004](docs/adr/004-3d-so-desktop.md)).
 
@@ -68,6 +70,27 @@ npm run bake:social    # imagem de compartilhamento 1200x630 e ícones
 ```
 
 **Ver o 3D ao vivo num computador com 4 núcleos:** pela regra do ADR 004 ele recebe a versão estática. No Chrome, abra o DevTools (F12), vá na aba **Performance**, clique na engrenagem ⚙️, mude **Hardware concurrency** para 8 e recarregue com o DevTools aberto.
+
+## Deploy na Vercel (plano grátis)
+
+O `vercel.json` já define o build (`npm run build` → `dist/`) e o cache: arquivos de `/assets/` têm hash no nome e ficam em cache por 1 ano; fontes, pôsteres e fotos ficam por 7 dias, porque o nome não muda quando o arquivo muda.
+
+1. Entre em [vercel.com](https://vercel.com) com a conta do GitHub.
+2. **Add New → Project** e importe `RichardMIB/margoo-brand-landing`.
+3. Confira o que a Vercel detectou: Framework **Vite**, Build `npm run build`, Output `dist`, Node **22.x** (em *Settings → Build and Deployment*, se precisar). Não há variáveis secretas.
+4. **Deploy.** A Vercel informa o domínio de produção no build (`VERCEL_PROJECT_PRODUCTION_URL`), e com ele o site gera canonical, `og:url`, `sitemap.xml` e o `robots.txt` apontando o sitemap.
+5. **Domínio próprio (opcional):** em *Settings → Domains*, adicione o domínio e siga os registros DNS indicados. Depois, em *Settings → Environment Variables*, crie `SITE_URL=https://seudominio.com.br` (Production) e faça **Redeploy**, para as tags usarem o domínio próprio.
+6. Confira em produção:
+   ```bash
+   curl -sI https://SEU-DOMINIO/ | grep -i -E "x-content-type|referrer"
+   curl -s https://SEU-DOMINIO/robots.txt
+   curl -s https://SEU-DOMINIO/sitemap.xml
+   ```
+   - Cole o link no [validador do LinkedIn](https://www.linkedin.com/post-inspector/) ou mande para você mesmo no WhatsApp e veja a prévia com a imagem 1200×630.
+   - Rode o Lighthouse na URL de produção e atualize a tabela acima, se mudar.
+7. Troque o "_link do deploy_" no topo deste README pelo endereço real.
+
+A partir daí, cada push na `main` publica sozinho, e cada pull request ganha uma URL de prévia.
 
 ## Dívida técnica
 

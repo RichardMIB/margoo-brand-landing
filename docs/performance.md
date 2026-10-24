@@ -84,4 +84,20 @@ O que mudou:
 - com a CPU normal, a fita a **57,9 fps de média** (mediana 60) com o mouse passeando sobre os botões de vidro;
 - o LCP não muda, porque a cena só começa depois dele (Fase 4).
 
+### Remedição no fechamento da fase (23/10/2026, commit `1ab2e22`)
+
+Mesmo comando, todas as categorias, 3 rodadas de cada (mais 3 Mobile extras para separar ruído de regressão). A máquina estava mais carregada: o `benchmarkIndex` do Lighthouse variou de 571 a 1.022 entre rodadas.
+
+| Rodada | Performance | LCP | FCP | CLS | TBT | Speed Index |
+|---|---|---|---|---|---|---|
+| Mobile 1 / 2 / 3 | 92 / 86 / 93 | 2,70 / 2,65 / 2,47 s | 1,58 / 1,54 / 1,48 s | 0 | 211 / 279 / 119 ms | 2,42 / 5,16 / 4,84 s |
+| **Mediana Mobile** | **92** | **2,65 s (−12% vs. base)** | **1,54 s** | **0** | **211 ms** | **4,84 s** |
+| Mobile extras 4 / 5 / 6 | 93 / 90 / 93 | 2,74 / 2,64 / 2,48 s | — | 0 | 185 / 288 / 124 ms | 2,02 / 2,35 / 4,79 s |
+| Desktop 1 / 2 / 3 | 99 / 99 / 99 | 0,73 / 0,81 / 0,68 s | 0,49 / 0,53 / 0,45 s | 0 | 20 / 22 / 7 ms | 1,17 / 1,27 / 1,04 s |
+| **Mediana Desktop** | **99** | **0,73 s** | **0,49 s** | **0** | **20 ms** | **1,17 s** |
+
+Acessibilidade, boas práticas e SEO: **100 em todas as 9 rodadas**. Nenhuma rodada baixou `SceneCanvas-*.js`.
+
+**Por que o Mobile caiu de 96 para 92:** o Speed Index ficou em dois grupos (~2 s e ~5 s). Nas rodadas lentas, a última mudança visual acontece em ~3,4 s: é o **fade do pôster da fita**, que por projeto entra depois do LCP e de um momento ocioso. Com a CPU mais lenta, esse momento chega mais tarde e o Speed Index cobra. Não é regressão de código; o LCP continua 12% melhor que a linha de base. Se um dia a nota pesar mais que o efeito, a saída é encurtar o fade ou começar o pôster já visível no lugar.
+
 Dívida que continua: **v2, trocar R3F por three puro na cena para reduzir o pacote do 3D** (hoje ~245 kB gzip; afeta só o desktop forte).
